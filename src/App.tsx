@@ -165,7 +165,7 @@ function Button7() {
 
 function Container4({ onNavigateToDesignSystem }: { onNavigateToDesignSystem: () => void }) {
   return (
-    <div className="absolute box-border content-stretch flex flex-col items-start left-0 px-0 py-px top-[773px]">
+    <div className="box-border content-stretch flex flex-col items-start px-0 py-px w-full">
       <Container2 onNavigateToDesignSystem={onNavigateToDesignSystem} />
       <Button7 />
     </div>
@@ -174,10 +174,11 @@ function Container4({ onNavigateToDesignSystem }: { onNavigateToDesignSystem: ()
 
 function Sidebar({ currentView, onNavigate, onNavigateToIntake, onNavigateToDesignSystem }: { currentView: string; onNavigate: (view: 'today' | 'disputes') => void; onNavigateToIntake: () => void; onNavigateToDesignSystem: () => void }) {
   return (
-    <div className="bg-[#f5f5f7] h-full relative shrink-0 w-[186px]">
-      <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border h-full relative w-[186px]">
+    <div className="bg-[#f5f5f7] h-full relative shrink-0 w-[186px] flex flex-col">
+      <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border h-full relative w-[186px] flex flex-col">
         <Container1 />
         <List currentView={currentView} onNavigate={onNavigate} onNavigateToIntake={onNavigateToIntake} />
+        <div className="flex-1" />
         <Container4 onNavigateToDesignSystem={onNavigateToDesignSystem} />
       </div>
     </div>

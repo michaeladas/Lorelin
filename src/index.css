@@ -481,10 +481,6 @@
     top: 80px;
   }
 
-  .top-\[773px\] {
-    top: 773px;
-  }
-
   .right-6 {
     right: calc(var(--spacing) * 6);
   }

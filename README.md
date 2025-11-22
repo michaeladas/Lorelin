@@ -1,7 +1,7 @@
 
-  # Disputes Management Screen
+  # Lorelin
 
-  This is a code bundle for Disputes Management Screen. The original project is available at https://www.figma.com/design/ejliaSqVBJ1uFAr5lIOR0v/Disputes-Management-Screen.
+  This is a code bundle for Lorelin. The original project is available at https://www.figma.com/design/ejliaSqVBJ1uFAr5lIOR0v/Lorelin.
 
   ## Running the code
 
