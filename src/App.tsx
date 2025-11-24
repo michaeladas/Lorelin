@@ -7,6 +7,13 @@ import { CaseDetailIDR } from './components/CaseDetailIDR';
 import { CaseDetailAppeal } from './components/CaseDetailAppeal';
 import { DesignSystemScreen } from './components/DesignSystemScreen';
 import { IntakeScreen } from './components/IntakeScreen';
+import { TemplatesScreen } from './components/TemplatesScreen';
+import { NegotiationLetterTemplate } from './components/templates/NegotiationLetterTemplate';
+import { IDRPacketTemplate } from './components/templates/IDRPacketTemplate';
+import { AppealLetterTemplate } from './components/templates/AppealLetterTemplate';
+import { ReconsiderationLetterTemplate } from './components/templates/ReconsiderationLetterTemplate';
+import { VisitsScreen } from './components/VisitsScreen';
+import { VisitDetailScreen } from './components/VisitDetailScreen';
 
 function Text() {
   return (
@@ -62,13 +69,14 @@ function Button({ label, active, onClick }: { label: string; active?: boolean; o
   );
 }
 
-function List({ currentView, onNavigate, onNavigateToIntake }: { currentView: string; onNavigate: (view: 'today' | 'disputes') => void; onNavigateToIntake: () => void }) {
+function List({ currentView, onNavigate, onNavigateToIntake, onNavigateToTemplates }: { currentView: string; onNavigate: (view: 'today' | 'disputes' | 'visits') => void; onNavigateToIntake: () => void; onNavigateToTemplates: () => void }) {
   return (
     <div className="absolute content-stretch flex flex-col gap-[4px] h-[156px] items-start left-[12px] top-[80px] w-[232px]">
-      <Button label="Today" active={currentView === 'today'} onClick={() => onNavigate('today')} />
-      <Button label="Worklist" active={currentView === 'disputes' || currentView.startsWith('case-detail')} onClick={() => onNavigate('disputes')} />
+      <Button label="Dashboard" active={currentView === 'today'} onClick={() => onNavigate('today')} />
+      <Button label="Visits" active={currentView === 'visits' || currentView === 'visit-detail'} onClick={() => onNavigate('visits')} />
+      <Button label="Disputes" active={currentView === 'disputes' || currentView.startsWith('case-detail')} onClick={() => onNavigate('disputes')} />
       <Button label="Diagnostics" active={currentView === 'intake'} onClick={onNavigateToIntake} />
-      <Button label="Templates" />
+      <Button label="Templates" active={currentView === 'templates' || currentView.startsWith('template-')} onClick={onNavigateToTemplates} />
     </div>
   );
 }
@@ -172,12 +180,12 @@ function Container4({ onNavigateToDesignSystem }: { onNavigateToDesignSystem: ()
   );
 }
 
-function Sidebar({ currentView, onNavigate, onNavigateToIntake, onNavigateToDesignSystem }: { currentView: string; onNavigate: (view: 'today' | 'disputes') => void; onNavigateToIntake: () => void; onNavigateToDesignSystem: () => void }) {
+function Sidebar({ currentView, onNavigate, onNavigateToIntake, onNavigateToTemplates, onNavigateToDesignSystem }: { currentView: string; onNavigate: (view: 'today' | 'disputes' | 'visits') => void; onNavigateToIntake: () => void; onNavigateToTemplates: () => void; onNavigateToDesignSystem: () => void }) {
   return (
     <div className="bg-[#f5f5f7] h-full relative shrink-0 w-[186px] flex flex-col">
       <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border h-full relative w-[186px] flex flex-col">
         <Container1 />
-        <List currentView={currentView} onNavigate={onNavigate} onNavigateToIntake={onNavigateToIntake} />
+        <List currentView={currentView} onNavigate={onNavigate} onNavigateToIntake={onNavigateToIntake} onNavigateToTemplates={onNavigateToTemplates} />
         <div className="flex-1" />
         <Container4 onNavigateToDesignSystem={onNavigateToDesignSystem} />
       </div>
@@ -186,7 +194,7 @@ function Sidebar({ currentView, onNavigate, onNavigateToIntake, onNavigateToDesi
 }
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'today' | 'disputes' | 'intake' | 'case-detail' | 'case-detail-idr' | 'case-detail-appeal' | 'design-system'>('today');
+  const [currentView, setCurrentView] = useState<'today' | 'disputes' | 'visits' | 'visit-detail' | 'intake' | 'templates' | 'template-1' | 'template-2' | 'template-3' | 'template-4' | 'case-detail' | 'case-detail-idr' | 'case-detail-appeal' | 'design-system'>('today');
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
 
   const handleOpenCase = (id: string) => {
@@ -207,18 +215,48 @@ export default function App() {
     setSelectedCaseId(null);
   };
 
+  const handleViewTemplate = (templateId: string) => {
+    setCurrentView(`template-${templateId}` as any);
+  };
+
+  const handleBackToTemplates = () => {
+    setCurrentView('templates');
+  };
+
+  const handleViewVisit = (visitId: string) => {
+    setCurrentView('visit-detail');
+  };
+
+  const handleBackToVisits = () => {
+    setCurrentView('visits');
+  };
+
   return (
     <div className="bg-[#f5f5f7] h-screen w-screen overflow-hidden flex">
-      <Sidebar currentView={currentView} onNavigate={setCurrentView} onNavigateToIntake={() => setCurrentView('intake')} onNavigateToDesignSystem={() => setCurrentView('design-system')} />
+      <Sidebar currentView={currentView} onNavigate={setCurrentView} onNavigateToIntake={() => setCurrentView('intake')} onNavigateToTemplates={() => setCurrentView('templates')} onNavigateToDesignSystem={() => setCurrentView('design-system')} />
       
       {/* Main Content */}
       <div className="flex-1 bg-[#f5f5f7] h-full overflow-auto">
         {currentView === 'today' ? (
           <TodayScreen onOpenCase={handleOpenCase} />
+        ) : currentView === 'visits' ? (
+          <VisitsScreen onViewVisit={handleViewVisit} />
+        ) : currentView === 'visit-detail' ? (
+          <VisitDetailScreen onBack={handleBackToVisits} />
         ) : currentView === 'disputes' ? (
           <DisputesScreen onOpenCase={handleOpenCase} />
         ) : currentView === 'intake' ? (
           <IntakeScreen />
+        ) : currentView === 'templates' ? (
+          <TemplatesScreen onViewTemplate={handleViewTemplate} />
+        ) : currentView === 'template-1' ? (
+          <NegotiationLetterTemplate onBack={handleBackToTemplates} />
+        ) : currentView === 'template-2' ? (
+          <IDRPacketTemplate onBack={handleBackToTemplates} />
+        ) : currentView === 'template-3' ? (
+          <AppealLetterTemplate onBack={handleBackToTemplates} />
+        ) : currentView === 'template-4' ? (
+          <ReconsiderationLetterTemplate onBack={handleBackToTemplates} />
         ) : currentView === 'case-detail-idr' ? (
           <CaseDetailIDR onBack={handleBackToDisputes} />
         ) : currentView === 'case-detail-appeal' ? (

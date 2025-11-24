@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ChevronRight, AlertCircle } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
 // Mock data for the stacked bar chart - with OON and In-network breakdown
 const chartDataAll = [
@@ -99,28 +99,6 @@ const mockCases = [
     procedure: 'Abdominoplasty',
     payer: 'Aetna HMO',
     potential: 3200,
-    type: 'INN - Underpayment' as const,
-    action: 'Review & ignore' as const,
-    deadline: 'No formal deadline',
-    daysUntilDeadline: 999,
-  },
-  {
-    id: '3',
-    patient: 'M. Patel',
-    procedure: 'Abdominoplasty',
-    payer: 'Cigna HMO',
-    potential: 4200,
-    type: 'INN - Appeal' as const,
-    action: 'Draft appeal' as const,
-    deadline: 'Appeal window: 12 days left',
-    daysUntilDeadline: 12,
-  },
-  {
-    id: '6',
-    patient: 'R. Johnson',
-    procedure: 'Blepharoplasty',
-    payer: 'Kaiser Permanente',
-    potential: 2400,
     type: 'INN - Underpayment' as const,
     action: 'Review & ignore' as const,
     deadline: 'No formal deadline',
@@ -287,184 +265,70 @@ export function TodayScreen({ onOpenCase }: TodayScreenProps) {
           <div className="size-full">
             <div className="box-border content-stretch flex flex-col gap-[24px] items-start px-[33px] py-[25px] relative w-full">
               
-              {/* KPI Strip - Two Column Layout */}
-              <div className="flex items-start justify-between w-full gap-8">
-                {/* Left: Total + Breakdown */}
-                <div className="flex flex-col gap-3 flex-1">
-                  <div className="flex flex-col gap-1">
-                    <div className="text-[10px] text-[#99A1AF] tracking-[0.05em] uppercase font-medium">
-                      Total potential recovery · Last 90 days
-                    </div>
-                    <div className="text-[42px] font-semibold text-[#101828] tracking-[-0.02em] leading-[1.1]">
-                      $83,400
-                    </div>
+              {/* KPI Header */}
+              <div className="flex flex-col gap-3 w-full">
+                <div className="flex flex-col gap-1">
+                  <div className="text-[10px] text-[#99A1AF] tracking-[0.05em] uppercase font-medium">
+                    Total potential recovery · Last 90 days
                   </div>
-                  
-                  {/* Breakdown by type */}
-                  <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[13px] text-[#4a5565]">$48,200</span>
-                      <span className="text-[12px] text-[#6a7282]">from OON / NSA / IDR</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[13px] text-[#4a5565]">$35,200</span>
-                      <span className="text-[12px] text-[#6a7282]">from In-network denials/underpayments</span>
-                    </div>
+                  <div className="text-[42px] font-semibold text-[#101828] tracking-[-0.02em] leading-[1.1]">
+                    $83,400
                   </div>
                 </div>
-
-                {/* Right: Status chips */}
-                <div className="flex flex-col gap-2 pt-[22px]">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded text-[11px] border border-gray-200/60 bg-transparent text-[#6a7282]">
-                    $31,200 recovered
-                  </span>
-                  <span className="inline-flex items-center px-2.5 py-1 rounded text-[11px] border border-gray-200/60 bg-transparent text-[#6a7282]">
-                    $41,500 in progress
-                  </span>
-                  <span className="inline-flex items-center px-2.5 py-1 rounded text-[11px] border border-amber-200/40 bg-amber-50/40 text-amber-700/80">
-                    $10,700 at risk
-                  </span>
+                
+                {/* Breakdown by type */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] text-[#4a5565]">$48,200</span>
+                    <span className="text-[12px] text-[#6a7282]">from OON / NSA / IDR</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] text-[#4a5565]">$35,200</span>
+                    <span className="text-[12px] text-[#6a7282]">from In-network denials/underpayments</span>
+                  </div>
                 </div>
-              </div>
-
-              {/* Caption */}
-              <div className="text-[11px] text-[#99A1AF]">
-                Breakdown by OON vs In-network · Based on last diagnostic + new claims
               </div>
 
               {/* Chart Section */}
               <div className="w-full border-t border-gray-100 pt-6">
-                {/* Chart header with toggle */}
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[11px] text-[#99A1AF]">Recovered vs still on the table by week</span>
-                  <div className="flex items-center gap-4">
-                    {/* Toggle */}
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => setChartView('all')}
-                        className={`px-2.5 py-1 rounded text-[11px] tracking-[-0.15px] transition-all ${
-                          chartView === 'all'
-                            ? 'bg-[#101828] text-white'
-                            : 'text-[#6a7282] hover:text-[#101828] hover:bg-gray-50'
-                        }`}
-                      >
-                        All
-                      </button>
-                      <button
-                        onClick={() => setChartView('oon')}
-                        className={`px-2.5 py-1 rounded text-[11px] tracking-[-0.15px] transition-all ${
-                          chartView === 'oon'
-                            ? 'bg-[#101828] text-white'
-                            : 'text-[#6a7282] hover:text-[#101828] hover:bg-gray-50'
-                        }`}
-                      >
-                        OON / NSA
-                      </button>
-                      <button
-                        onClick={() => setChartView('inn')}
-                        className={`px-2.5 py-1 rounded text-[11px] tracking-[-0.15px] transition-all ${
-                          chartView === 'inn'
-                            ? 'bg-[#101828] text-white'
-                            : 'text-[#6a7282] hover:text-[#101828] hover:bg-gray-50'
-                        }`}
-                      >
-                        In-network
-                      </button>
-                    </div>
-                    {/* Legend */}
-                    <div className="flex items-center gap-3.5">
-                      <div className="flex items-center gap-1.5">
-                        <div className="size-1.5 rounded-full bg-emerald-600" />
-                        <span className="text-[10px] text-[#99A1AF]">Recovered</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="size-1.5 rounded-full bg-gray-300" />
-                        <span className="text-[10px] text-[#99A1AF]">Still on the table</span>
-                      </div>
-                    </div>
+                  <span className="text-[11px] text-[#99A1AF]">Recovered vs still on the table</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setChartView('all')}
+                      className={`size-1.5 rounded-full ${chartView === 'all' ? 'bg-[#101828]' : 'bg-gray-200'}`}
+                    />
+                    <button
+                      onClick={() => setChartView('oon')}
+                      className={`size-1.5 rounded-full ${chartView === 'oon' ? 'bg-[#101828]' : 'bg-gray-200'}`}
+                    />
                   </div>
                 </div>
 
-                {/* Chart */}
-                <div className="w-full h-[220px] pt-2 pb-3">
+                <div className="w-full h-[140px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={getChartData()} barGap={4} margin={{ top: 10, right: 10, bottom: 5, left: 0 }}>
-                      <CartesianGrid 
-                        strokeDasharray="3 3" 
-                        stroke="#e5e7eb" 
-                        vertical={false}
-                      />
-                      <XAxis 
-                        dataKey="week" 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#99A1AF', fontSize: 10 }}
-                      />
-                      <YAxis 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#99A1AF', fontSize: 10 }}
-                        tickFormatter={(value) => `${value / 1000}k`}
-                        ticks={[0, 25000, 50000]}
-                        domain={[0, 50000]}
-                      />
+                    <BarChart data={getChartData()} barGap={4} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                      <XAxis dataKey="week" axisLine={false} tickLine={false} tick={false} height={0} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#99A1AF', fontSize: 10 }} tickFormatter={(value) => `${value / 1000}k`} ticks={[0, 25000, 50000]} domain={[0, 50000]} />
                       <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} />
                       {chartView === 'all' ? (
                         <>
                           <Bar dataKey="oonRecovered" stackId="recovered" fill="#10b981" radius={[0, 0, 0, 0]} />
-                          <Bar dataKey="innRecovered" stackId="recovered" fill="#059669" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="innRecovered" stackId="recovered" fill="#059669" radius={[2, 2, 0, 0]} />
                           <Bar dataKey="oonOnTable" stackId="onTable" fill="#d1d5db" radius={[0, 0, 0, 0]} />
-                          <Bar dataKey="innOnTable" stackId="onTable" fill="#9ca3af" radius={[4, 4, 0, 0]} />
-                        </>
-                      ) : chartView === 'oon' ? (
-                        <>
-                          <Bar dataKey="oonRecovered" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
-                          <Bar dataKey="oonOnTable" stackId="a" fill="#d1d5db" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="innOnTable" stackId="onTable" fill="#9ca3af" radius={[2, 2, 0, 0]} />
                         </>
                       ) : (
                         <>
-                          <Bar dataKey="innRecovered" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
-                          <Bar dataKey="innOnTable" stackId="a" fill="#d1d5db" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="oonRecovered" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
+                          <Bar dataKey="oonOnTable" stackId="a" fill="#d1d5db" radius={[2, 2, 0, 0]} />
                         </>
                       )}
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* New Since Last Visit Banner */}
-        <div className="bg-white relative rounded-[14px] shrink-0 w-full mb-6">
-          <div aria-hidden="true" className="absolute border border-gray-100 border-solid inset-0 pointer-events-none rounded-[14px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]" />
-          <div className="size-full">
-            <div className="box-border content-stretch flex items-center gap-6 px-[33px] py-[20px] relative w-full">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="size-4 text-[#101828]" />
-                <span className="text-[13px] font-medium text-[#101828]">Since you last logged in:</span>
-              </div>
-              <button 
-                onClick={() => setDisputeTypeFilter('oon')}
-                className="text-[13px] text-[#6a7282] hover:text-[#101828] transition-colors"
-              >
-                <span className="font-semibold text-[#101828]">7</span> new OON cases flagged
-              </button>
-              <button 
-                onClick={() => setDisputeTypeFilter('inn')}
-                className="text-[13px] text-[#6a7282] hover:text-[#101828] transition-colors"
-              >
-                <span className="font-semibold text-[#101828]">12</span> in-network denials worth appealing
-              </button>
-              <button 
-                onClick={() => {
-                  setDisputeTypeFilter('oon');
-                  setActionFilter('idr');
-                }}
-                className="text-[13px] text-[#6a7282] hover:text-[#101828] transition-colors"
-              >
-                <span className="font-semibold text-[#101828]">3</span> approaching IDR deadlines
-              </button>
             </div>
           </div>
         </div>
@@ -478,7 +342,7 @@ export function TodayScreen({ onOpenCase }: TodayScreenProps) {
               {/* Card Header with Filters */}
               <div className="flex flex-col gap-3 w-full mb-5">
                 <h2 className="text-[14px] font-medium text-[#101828] tracking-[-0.15px]">
-                  Cases to act on
+                  All cases to act on
                 </h2>
                 
                 {/* Two rows of filters */}
@@ -570,7 +434,7 @@ export function TodayScreen({ onOpenCase }: TodayScreenProps) {
               </div>
 
               {/* Table */}
-              <div className="w-full">
+              <div className="w-full overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200">
@@ -587,73 +451,62 @@ export function TodayScreen({ onOpenCase }: TodayScreenProps) {
                         <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Type</span>
                       </th>
                       <th className="px-3 py-2.5 text-right">
-                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Potential +$</span>
+                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Potential</span>
                       </th>
                       <th className="px-3 py-2.5 text-left">
-                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Next action</span>
+                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase pl-6">Deadline</span>
                       </th>
                       <th className="px-3 py-2.5 text-left">
-                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Deadline</span>
+                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Next Action</span>
+                      </th>
+                      <th className="px-3 py-2.5 text-right">
+                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Action</span>
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredCases.map((caseItem, index) => (
-                      <tr
-                        key={caseItem.id}
-                        onClick={() => onOpenCase(caseItem.id)}
-                        className={`border-b border-gray-100 hover:bg-blue-50/20 cursor-pointer transition-colors group ${ 
-                          index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'
-                        }`}
+                    {filteredCases.map((c) => (
+                      <tr 
+                        key={c.id} 
+                        onClick={() => onOpenCase(c.id)}
+                        className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors cursor-pointer"
                       >
-                        <td className="px-3 py-2.5">
-                          <span className="text-[13px] text-[#101828] tracking-[-0.15px]">{caseItem.patient}</span>
+                        <td className="px-3 py-3">
+                          <span className="text-[13px] font-medium text-[#101828] tracking-[-0.15px]">{c.patient}</span>
                         </td>
-                        <td className="px-3 py-2.5">
-                          <span className="text-[13px] text-[#101828] tracking-[-0.15px]">{caseItem.procedure}</span>
+                        <td className="px-3 py-3">
+                          <span className="text-[13px] text-[#4a5565] tracking-[-0.15px]">{c.procedure}</span>
                         </td>
-                        <td className="px-3 py-2.5">
-                          <span className="text-[13px] text-[#4a5565] tracking-[-0.15px]">{caseItem.payer}</span>
+                        <td className="px-3 py-3">
+                          <span className="text-[13px] text-[#4a5565] tracking-[-0.15px]">{c.payer}</span>
                         </td>
-                        <td className="px-3 py-2.5">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-1 rounded text-[11px] border ${getTypeColor(
-                              caseItem.type
-                            )}`}
-                          >
-                            {caseItem.type}
+                        <td className="px-3 py-3">
+                          <span className={`inline-flex px-2 py-0.5 rounded text-[11px] font-medium border ${getTypeColor(c.type)}`}>
+                            {c.type}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 text-right">
-                          <span className="text-[15px] font-semibold text-emerald-700 tracking-[-0.2px]">
-                            +${caseItem.potential.toLocaleString()}
-                          </span>
+                        <td className="px-3 py-3 text-right">
+                          <span className="text-[13px] font-medium text-emerald-600 tracking-[-0.15px]">+${c.potential.toLocaleString()}</span>
                         </td>
-                        <td className="px-3 py-2.5">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Handle action
-                            }}
-                            className={`inline-flex items-center px-2.5 py-1 rounded text-[11px] border transition-colors ${getActionColor(
-                              caseItem.action
-                            )}`}
-                          >
-                            {caseItem.action}
-                          </button>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                              {getUrgencyIndicator(caseItem.daysUntilDeadline).show && (
-                                <div className={`size-1.5 rounded-full ${getUrgencyIndicator(caseItem.daysUntilDeadline).color} flex-shrink-0`} />
-                              )}
-                              <span className={`text-[13px] tracking-[-0.15px] ${getUrgencyColor(caseItem.daysUntilDeadline)}`}>
-                                {caseItem.deadline}
-                              </span>
-                            </div>
-                            <ChevronRight className="size-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <td className="px-3 py-3 pl-6">
+                          <div className="flex items-center gap-2">
+                            {getUrgencyIndicator(c.daysUntilDeadline).show && (
+                              <div className={`size-1.5 rounded-full ${getUrgencyIndicator(c.daysUntilDeadline).color}`} />
+                            )}
+                            <span className={`text-[12px] ${getUrgencyColor(c.daysUntilDeadline)} tracking-[-0.15px]`}>
+                              {c.deadline}
+                            </span>
                           </div>
+                        </td>
+                        <td className="px-3 py-3">
+                          <span className={`text-[12px] px-2 py-1 rounded ${getActionColor(c.action)}`}>
+                            {c.action}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-right">
+                          <button className="text-[#99A1AF] hover:text-[#101828] transition-colors">
+                            <ChevronRight className="size-4" />
+                          </button>
                         </td>
                       </tr>
                     ))}

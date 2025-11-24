@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, FileText, CheckCircle2, AlertCircle, ChevronLeft, ArrowRight } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, AlertCircle, ChevronLeft, ArrowRight, FilePlus } from 'lucide-react';
 
 interface DataUploadStepProps {
   onComplete: () => void;
@@ -9,6 +9,7 @@ interface DataUploadStepProps {
 export function DataUploadStep({ onComplete, onBack }: DataUploadStepProps) {
   const [claimsFile, setClaimsFile] = useState<File | null>(null);
   const [paymentsFile, setPaymentsFile] = useState<File | null>(null);
+  const [contractsFile, setContractsFile] = useState<File | null>(null);
   const [showMapping, setShowMapping] = useState(false);
   const [usingSampleData, setUsingSampleData] = useState(false);
   
@@ -27,13 +28,21 @@ export function DataUploadStep({ onComplete, onBack }: DataUploadStepProps) {
     adjustments: 'Adjustments',
   });
 
-  const handleFileUpload = (type: 'claims' | 'payments', event: React.ChangeEvent<HTMLInputElement>) => {
+  const [contractsMapping, setContractsMapping] = useState({
+    payer: 'Payer_ID',
+    cpt: 'CPT_Code',
+    allowedAmount: 'Contract_Rate',
+  });
+
+  const handleFileUpload = (type: 'claims' | 'payments' | 'contracts', event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (type === 'claims') {
         setClaimsFile(file);
-      } else {
+      } else if (type === 'payments') {
         setPaymentsFile(file);
+      } else {
+        setContractsFile(file);
       }
     }
   };
@@ -73,7 +82,7 @@ export function DataUploadStep({ onComplete, onBack }: DataUploadStepProps) {
 
           {/* Mapping Tables - White Card */}
           <div className="bg-white rounded-lg border border-gray-200 p-8 mb-6">
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-3 gap-8">
               {/* Claims Mapping */}
               <div>
                 <h3 className="text-[14px] font-semibold text-[#101828] mb-4">Claims file mapping</h3>
@@ -124,6 +133,37 @@ export function DataUploadStep({ onComplete, onBack }: DataUploadStepProps) {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Contracts Mapping (Optional) */}
+              <div>
+                <h3 className="text-[14px] font-semibold text-[#101828] mb-4">Contracts mapping</h3>
+                {contractsFile || usingSampleData ? (
+                  <div className="space-y-3">
+                    {[
+                      { label: 'Payer ID', required: true, mapped: contractsMapping.payer },
+                      { label: 'CPT Code', required: true, mapped: contractsMapping.cpt },
+                      { label: 'Contract Rate', required: true, mapped: contractsMapping.allowedAmount },
+                    ].map((field) => (
+                      <div key={field.label} className="flex items-center justify-between py-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[13px] text-[#101828]">{field.label}</span>
+                          {field.required && (
+                            <span className="text-[10px] text-red-600 uppercase tracking-wider">Required</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[13px] text-[#6a7282] font-mono">{field.mapped}</span>
+                          <CheckCircle2 className="size-4 text-emerald-600" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-[200px] text-center border-2 border-dashed border-gray-200 rounded-lg">
+                    <p className="text-[13px] text-[#6a7282]">No contract file uploaded</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -305,6 +345,67 @@ export function DataUploadStep({ onComplete, onBack }: DataUploadStepProps) {
                   ))}
                 </div>
               </div>
+            </div>
+
+            {/* Contracts File (Full Width) */}
+            <div className="col-span-2 border border-gray-200 rounded-lg p-6 bg-blue-50/30 border-blue-100">
+              <div className="flex items-start justify-between mb-5">
+                <div className="max-w-[600px]">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-[15px] font-semibold text-[#101828] tracking-[-0.02em]">
+                      Add contracts & fee schedules
+                    </h3>
+                    <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[11px] font-medium rounded-full">
+                      Optional but recommended
+                    </span>
+                  </div>
+                  <p className="text-[13px] text-[#6a7282] leading-[1.5] mb-3">
+                    Adding contracts lets us detect exact underpayments vs contract, build payer compliance scorecards, and strengthen OON/IDR recommendations.
+                  </p>
+                  <p className="text-[12px] text-[#6a7282]">
+                    You can start with just your top payers and top codes.
+                  </p>
+                </div>
+                {contractsFile && <CheckCircle2 className="size-5 text-emerald-600" />}
+              </div>
+
+              <label className="block cursor-pointer">
+                <input
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  onChange={(e) => handleFileUpload('contracts', e)}
+                  className="hidden"
+                />
+                <div className="border-2 border-dashed border-blue-200 rounded-lg p-6 hover:border-blue-300 hover:bg-blue-50/50 transition-colors text-center bg-white">
+                  {contractsFile ? (
+                    <div>
+                      <FileText className="size-8 text-emerald-600 mx-auto mb-3" />
+                      <div className="text-[13px] font-medium text-[#101828] mb-1">{contractsFile.name}</div>
+                      <div className="text-[11px] text-[#6a7282]">
+                        {(contractsFile.size / 1024 / 1024).toFixed(2)} MB
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-8">
+                      <div className="flex flex-col items-center">
+                         <FilePlus className="size-8 text-blue-400 mb-2" />
+                         <div className="text-[13px] font-medium text-[#101828]">
+                           Upload fee schedule
+                         </div>
+                         <div className="text-[11px] text-[#6a7282]">CSV/Excel</div>
+                      </div>
+                      <div className="h-12 w-px bg-gray-200"></div>
+                      <div className="text-left max-w-[200px]">
+                        <div className="text-[11px] text-[#99A1AF] uppercase tracking-wider mb-1">Example data</div>
+                        <div className="space-y-1">
+                          <div className="text-[11px] text-[#6a7282]">CPT 19357 · $1,250.00</div>
+                          <div className="text-[11px] text-[#6a7282]">CPT 15830 · $900.00</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </label>
             </div>
           </div>
         </div>

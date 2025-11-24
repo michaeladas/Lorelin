@@ -10,8 +10,10 @@ const mockDisputes = [
     procedure: { name: 'Breast reconstruction', code: 'CPT 19357' },
     payer: { name: 'Aetna PPO', planType: 'Self-funded' },
     billed: 8200,
-    paid: 2100,
-    potential: 3400,
+    paid: 1050,
+    potential: 200,
+    contractExpected: 1250,
+    contractGap: 200,
     type: 'OON - IDR' as const,
     path: 'Federal IDR' as const,
     issue: null,
@@ -58,18 +60,20 @@ const mockDisputes = [
   {
     id: '4',
     patient: { name: 'K. Williams', claimId: 'Claim #18283' },
-    procedure: { name: 'Facelift', code: 'CPT 15824' },
+    procedure: { name: 'Facelift', code: 'CPT 30400' }, // Updated code to match user example
     payer: { name: 'Blue Cross Blue Shield', planType: 'Self-funded' },
     billed: 15200,
-    paid: 5800,
-    potential: 6100,
-    type: 'OON - IDR' as const,
-    path: 'Federal IDR' as const,
-    issue: null,
-    status: 'Ready for IDR' as const,
-    nextAction: 'Generate IDR packet' as const,
-    deadline: { date: 'May 8', label: 'IDR filing' },
-    pathTooltip: 'OON service; NSA applies; ready for federal IDR filing',
+    paid: 1650,
+    potential: 300,
+    contractExpected: 1950,
+    contractGap: 300,
+    type: 'INN - Underpayment' as const, // Changed to match user scenario (Contract Underpayment)
+    path: 'Appeal only' as const,
+    issue: 'Underpayment',
+    status: 'New' as const,
+    nextAction: 'Draft appeal' as const,
+    deadline: { date: 'May 28', label: 'Appeal deadline' },
+    pathTooltip: 'Paid below contract rate',
     isUrgent: true,
   },
   {
@@ -142,7 +146,6 @@ const mockDisputes = [
   },
 ];
 
-type TabType = 'needs-attention' | 'all' | 'new' | 'in-negotiation' | 'ready-for-idr' | 'filed' | 'closed';
 type DisputeTypeFilter = 'all' | 'oon' | 'inn' | 'underpayment';
 
 interface DisputesScreenProps {
@@ -153,16 +156,6 @@ export function DisputesScreen({ onOpenCase }: DisputesScreenProps) {
   const [primaryView, setPrimaryView] = useState<'needs-attention' | 'all'>('needs-attention');
   const [disputeTypeFilter, setDisputeTypeFilter] = useState<DisputeTypeFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
-
-  const tabs = [
-    { id: 'needs-attention', label: 'Needs attention', count: 2 },
-    { id: 'all', label: 'All', count: 6 },
-    { id: 'new', label: 'New', count: 1 },
-    { id: 'in-negotiation', label: 'In negotiation', count: 2 },
-    { id: 'ready-for-idr', label: 'Ready for IDR', count: 1 },
-    { id: 'filed', label: 'Filed', count: 1 },
-    { id: 'closed', label: 'Closed', count: 0 },
-  ];
 
   return (
     <div className="overflow-auto size-full bg-[#f5f5f7]">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, AlertCircle, Calendar, DollarSign, FileText, ArrowRight, ExternalLink } from 'lucide-react';
+import { TrendingUp, AlertCircle, Calendar, DollarSign, FileText, ArrowRight, ExternalLink, Info, CheckCircle } from 'lucide-react';
 
 export function ResultsView() {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
@@ -26,6 +26,32 @@ export function ResultsView() {
     { category: 'Eligible', value: 45, color: '#10b981' },
     { category: 'Deadline approaching', value: 23, color: '#f59e0b' },
     { category: 'Review needed', value: 32, color: '#6b7280' },
+  ];
+
+  const mockContractCases = [
+    {
+      id: '101',
+      patient: 'J. Martinez',
+      payer: 'Aetna PPO',
+      cpt: '19357',
+      contractVsPaid: '$1,250 contract / $1,050 paid',
+      underpayment: 200,
+      deadline: 'Jun 2'
+    },
+    {
+      id: '102',
+      patient: 'K. Williams',
+      payer: 'BCBS',
+      cpt: '30400',
+      contractVsPaid: '$1,950 contract / $1,650 paid',
+      underpayment: 300,
+      deadline: 'May 28'
+    }
+  ];
+
+  const mockPayerCompliance = [
+    { payer: 'Aetna PPO', claims: 4320, paidAtContract: 73, underpaidCount: 1170, underpaidAmount: 41900, topCode: '19357' },
+    { payer: 'BCBS', claims: 3980, paidAtContract: 81, underpaidCount: 760, underpaidAmount: 30500, topCode: '30400' },
   ];
 
   return (
@@ -317,6 +343,130 @@ export function ResultsView() {
             <div className="text-[11px] text-[#6a7282] mb-2">What our platform would do here:</div>
             <div className="text-[12px] text-[#101828]">
               Automatically prepare IDR packages for the 45 eligible claims, including QPA calculations, evidence documentation, and federal portal submissions.
+            </div>
+          </div>
+        </div>
+
+        {/* Contract Compliance by Payer */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-[16px] font-semibold text-[#101828] mb-1 flex items-center gap-2">
+                Contract compliance by payer
+                <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide uppercase">Contract-aware</span>
+              </h3>
+              <p className="text-[12px] text-[#6a7282]">Actual paid amounts compared to your contracted rates</p>
+            </div>
+          </div>
+
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
+            <div className="flex gap-3">
+              <CheckCircle className="size-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="text-[13px] font-medium text-[#101828] mb-1">
+                  Contracts detected
+                </div>
+                <div className="text-[12px] text-[#4a5565]">
+                  We loaded contracts for <strong>Aetna PPO</strong> and <strong>BCBS</strong>, covering ~83% of your in-network claims. The analysis below shows exact contract gaps.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="px-3 py-2 text-left text-[11px] text-[#6a7282] tracking-[0.05em] uppercase font-medium">Payer</th>
+                  <th className="px-3 py-2 text-right text-[11px] text-[#6a7282] tracking-[0.05em] uppercase font-medium">Claims w/ contract</th>
+                  <th className="px-3 py-2 text-right text-[11px] text-[#6a7282] tracking-[0.05em] uppercase font-medium">Paid at contract</th>
+                  <th className="px-3 py-2 text-right text-[11px] text-[#6a7282] tracking-[0.05em] uppercase font-medium">Underpaid claims</th>
+                  <th className="px-3 py-2 text-right text-[11px] text-[#6a7282] tracking-[0.05em] uppercase font-medium">Underpaid $</th>
+                  <th className="px-3 py-2 text-right text-[11px] text-[#6a7282] tracking-[0.05em] uppercase font-medium">Top underpaid code</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mockPayerCompliance.map((row, i) => (
+                  <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors cursor-pointer group">
+                    <td className="px-3 py-3 text-[13px] font-medium text-[#101828]">{row.payer}</td>
+                    <td className="px-3 py-3 text-[13px] text-[#6a7282] text-right">{row.claims.toLocaleString()}</td>
+                    <td className="px-3 py-3 text-right">
+                      <div className="inline-flex items-center gap-1.5">
+                        <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full ${row.paidAtContract < 80 ? 'bg-amber-500' : 'bg-emerald-500'}`} 
+                            style={{ width: `${row.paidAtContract}%` }} 
+                          />
+                        </div>
+                        <span className="text-[13px] text-[#101828] font-medium">{row.paidAtContract}%</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-[13px] text-[#6a7282] text-right">{row.underpaidCount.toLocaleString()}</td>
+                    <td className="px-3 py-3 text-[13px] font-medium text-red-600 text-right">${row.underpaidAmount.toLocaleString()}</td>
+                    <td className="px-3 py-3 text-[13px] text-[#6a7282] font-mono text-right group-hover:text-blue-600 flex justify-end items-center gap-1">
+                      {row.topCode}
+                      <ArrowRight className="size-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-gray-100">
+            <div className="text-[11px] text-[#6a7282] mb-2">Key finding:</div>
+            <div className="text-[12px] text-[#101828]">
+              Aetna PPO is only paying at contracted rates 73% of the time. This represents $41,900 in recoverable underpayments with strong legal grounds since you have the contract on file.
+            </div>
+          </div>
+        </div>
+
+        {/* Top Contract Underpayments to Action */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-[16px] font-semibold text-[#101828] mb-1 flex items-center gap-2">
+                Top contract underpayments to act on
+                <span className="bg-red-50 text-red-700 px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide uppercase">Action Required</span>
+              </h3>
+              <p className="text-[12px] text-[#6a7282]">Claims paid below contracted rates with active appeal windows</p>
+            </div>
+            <button className="text-[12px] text-blue-600 font-medium hover:text-blue-700">
+              View all →
+            </button>
+          </div>
+
+          <div className="w-full overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="px-3 py-2 text-left text-[11px] text-[#6a7282] tracking-[0.05em] uppercase font-medium">Patient</th>
+                  <th className="px-3 py-2 text-left text-[11px] text-[#6a7282] tracking-[0.05em] uppercase font-medium">Payer</th>
+                  <th className="px-3 py-2 text-left text-[11px] text-[#6a7282] tracking-[0.05em] uppercase font-medium">CPT</th>
+                  <th className="px-3 py-2 text-left text-[11px] text-[#6a7282] tracking-[0.05em] uppercase font-medium">Contract vs Paid</th>
+                  <th className="px-3 py-2 text-right text-[11px] text-[#6a7282] tracking-[0.05em] uppercase font-medium">Underpayment</th>
+                  <th className="px-3 py-2 text-left text-[11px] text-[#6a7282] tracking-[0.05em] uppercase font-medium pl-6">Deadline</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mockContractCases.map((row, i) => (
+                  <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors cursor-pointer">
+                    <td className="px-3 py-3 text-[13px] font-medium text-[#101828]">{row.patient}</td>
+                    <td className="px-3 py-3 text-[13px] text-[#4a5565]">{row.payer}</td>
+                    <td className="px-3 py-3 text-[13px] text-[#4a5565] font-mono">{row.cpt}</td>
+                    <td className="px-3 py-3 text-[13px] text-[#6a7282]">{row.contractVsPaid}</td>
+                    <td className="px-3 py-3 text-[13px] font-medium text-red-600 text-right bg-red-50/30">-${row.underpayment}</td>
+                    <td className="px-3 py-3 text-[13px] text-[#101828] pl-6">{row.deadline}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-gray-100">
+            <div className="text-[11px] text-[#6a7282] mb-2">What our platform would do here:</div>
+            <div className="text-[12px] text-[#101828]">
+              Auto-generate appeals with contract references, highlighting exact rate discrepancies. These have high win rates since the contract serves as proof of underpayment.
             </div>
           </div>
         </div>

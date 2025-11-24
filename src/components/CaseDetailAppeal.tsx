@@ -456,7 +456,7 @@ export function CaseDetailAppeal({ onBack }: CaseDetailAppealProps) {
                         <li>Underpayment: ${caseData.financials.potential.toLocaleString()}</li>
                       </ul>
                       <p className="mt-2">
-                        The contracted rate for CPT {caseData.procedure.code} should be ${caseData.financials.requesting.toLocaleString()} based on the current fee schedule for our facility and the complexity of this procedure.
+                        Your contract with us specifies an allowed amount of <strong>${caseData.financials.requesting.toLocaleString()}</strong> for CPT {caseData.procedure.code.replace('CPT ', '')} in POS 22 ({caseData.facility.type}). This claim was paid at ${caseData.financials.paid.toLocaleString()}. Please reprocess to the contracted rate.
                       </p>
                     </div>
 

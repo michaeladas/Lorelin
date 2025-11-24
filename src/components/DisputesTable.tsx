@@ -17,6 +17,8 @@ interface Dispute {
   billed: number;
   paid: number;
   potential: number;
+  contractExpected?: number;
+  contractGap?: number;
   type: 'OON - IDR' | 'OON - Negotiation' | 'INN - Denial appeal' | 'INN - Underpayment';
   path: 'Federal IDR' | 'State IDR' | 'Appeal only';
   issue: string | null;
@@ -126,15 +128,28 @@ export function DisputesTable({ disputes, onOpenCase }: DisputesTableProps) {
                 </div>
               </td>
 
-              {/* Value (combines Potential + Billed/Paid) */}
+              {/* Value (combines Potential + Billed/Paid or Contract data) */}
               <td className="px-3 py-2.5 text-right">
                 <div className="flex flex-col gap-0.5 items-end">
-                  <span className="text-[15px] font-semibold text-emerald-700 tracking-[-0.2px]">
-                    +${dispute.potential.toLocaleString()}
-                  </span>
-                  <span className="text-[11px] text-[#99A1AF]">
-                    Billed ${dispute.billed.toLocaleString()} · Paid ${dispute.paid.toLocaleString()}
-                  </span>
+                  {dispute.contractGap ? (
+                    <>
+                      <span className="text-[15px] font-semibold text-emerald-700 tracking-[-0.2px]">
+                        +${dispute.contractGap.toLocaleString()} (contract gap)
+                      </span>
+                      <span className="text-[11px] text-[#99A1AF]">
+                        Contract ${dispute.contractExpected?.toLocaleString()} · Paid ${dispute.paid.toLocaleString()}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-[15px] font-semibold text-emerald-700 tracking-[-0.2px]">
+                        +${dispute.potential.toLocaleString()}
+                      </span>
+                      <span className="text-[11px] text-[#99A1AF]">
+                        Billed ${dispute.billed.toLocaleString()} · Paid ${dispute.paid.toLocaleString()}
+                      </span>
+                    </>
+                  )}
                 </div>
               </td>
 
