@@ -1,519 +1,571 @@
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ChevronRight } from 'lucide-react';
+import { Mic, FileText, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 
-// Mock data for the stacked bar chart - with OON and In-network breakdown
-const chartDataAll = [
-  { week: 'Week 1', oonRecovered: 10200, oonOnTable: 5100, innRecovered: 8000, innOnTable: 3800 },
-  { week: 'Week 2', oonRecovered: 12800, oonOnTable: 7200, innRecovered: 9300, innOnTable: 5100 },
-  { week: 'Week 3', oonRecovered: 9100, oonOnTable: 5400, innRecovered: 6700, innOnTable: 3800 },
-  { week: 'Week 4', oonRecovered: 16400, oonOnTable: 6900, innRecovered: 12000, innOnTable: 4900 },
-  { week: 'Week 5', oonRecovered: 17100, oonOnTable: 8800, innRecovered: 12300, innOnTable: 6300 },
-  { week: 'Week 6', oonRecovered: 11400, oonOnTable: 7800, innRecovered: 8200, innOnTable: 5600 },
-  { week: 'Week 7', oonRecovered: 14100, oonOnTable: 6200, innRecovered: 10200, innOnTable: 4400 },
-  { week: 'Week 8', oonRecovered: 12500, oonOnTable: 8300, innRecovered: 9000, innOnTable: 5900 },
-];
+// Mock data for voice-to-cash over time
+const generateVoiceToCashData = (days: number) => {
+  const data = [];
+  const today = new Date();
+  
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    
+    // Generate realistic mock data
+    const sent = Math.floor(Math.random() * 5000) + 2000;
+    const recorded = Math.floor(Math.random() * 3000) + 1000;
+    const flagged = Math.floor(Math.random() * 800) + 100;
+    const notCaptured = Math.floor(Math.random() * 500) + 50;
+    
+    data.push({
+      date: date,
+      dateLabel: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      dayLabel: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      sent,
+      recorded,
+      flagged,
+      notCaptured,
+    });
+  }
+  
+  return data;
+};
 
-const chartDataOON = [
-  { week: 'Week 1', oonRecovered: 10200, oonOnTable: 5100 },
-  { week: 'Week 2', oonRecovered: 12800, oonOnTable: 7200 },
-  { week: 'Week 3', oonRecovered: 9100, oonOnTable: 5400 },
-  { week: 'Week 4', oonRecovered: 16400, oonOnTable: 6900 },
-  { week: 'Week 5', oonRecovered: 17100, oonOnTable: 8800 },
-  { week: 'Week 6', oonRecovered: 11400, oonOnTable: 7800 },
-  { week: 'Week 7', oonRecovered: 14100, oonOnTable: 6200 },
-  { week: 'Week 8', oonRecovered: 12500, oonOnTable: 8300 },
-];
+type WorkItemType = 'visit' | 'claim';
+type WorkItemStep = 'to-record' | 'to-review' | 'ready-to-send' | 'flagged';
 
-const chartDataINN = [
-  { week: 'Week 1', innRecovered: 8000, innOnTable: 3800 },
-  { week: 'Week 2', innRecovered: 9300, innOnTable: 5100 },
-  { week: 'Week 3', innRecovered: 6700, innOnTable: 3800 },
-  { week: 'Week 4', innRecovered: 12000, innOnTable: 4900 },
-  { week: 'Week 5', innRecovered: 12300, innOnTable: 6300 },
-  { week: 'Week 6', innRecovered: 8200, innOnTable: 5600 },
-  { week: 'Week 7', innRecovered: 10200, innOnTable: 4400 },
-  { week: 'Week 8', innRecovered: 9000, innOnTable: 5900 },
-];
-
-// Mock data for cases table
-const mockCases = [
-  {
-    id: '1',
-    patient: 'J. Martinez',
-    procedure: 'Breast reconstruction',
-    payer: 'Aetna PPO',
-    potential: 3400,
-    type: 'OON - IDR' as const,
-    action: 'Generate IDR packet' as const,
-    deadline: 'IDR filing closes today',
-    daysUntilDeadline: 0,
-  },
-  {
-    id: '4',
-    patient: 'K. Williams',
-    procedure: 'Facelift',
-    payer: 'Blue Cross Blue Shield',
-    potential: 6100,
-    type: 'OON - IDR' as const,
-    action: 'Generate IDR packet' as const,
-    deadline: 'IDR filing closes in 2 days',
-    daysUntilDeadline: 2,
-  },
-  {
-    id: '2',
-    patient: 'S. Chen',
-    procedure: 'Rhinoplasty',
-    payer: 'UnitedHealthcare',
-    potential: 5800,
-    type: 'OON - Negotiation' as const,
-    action: 'Generate negotiation letter' as const,
-    deadline: 'Open negotiation window: 5 days left',
-    daysUntilDeadline: 5,
-  },
-  {
-    id: '7',
-    patient: 'A. Rodriguez',
-    procedure: 'Breast augmentation',
-    payer: 'Cigna PPO',
-    potential: 4800,
-    type: 'INN - Appeal' as const,
-    action: 'Draft appeal' as const,
-    deadline: 'Appeal window: 3 days left',
-    daysUntilDeadline: 3,
-  },
-  {
-    id: '5',
-    patient: 'D. Thompson',
-    procedure: 'Liposuction',
-    payer: 'Humana PPO',
-    potential: 2900,
-    type: 'OON - Negotiation' as const,
-    action: 'Generate negotiation letter' as const,
-    deadline: 'Open negotiation window: 8 days left',
-    daysUntilDeadline: 8,
-  },
-  {
-    id: '8',
-    patient: 'L. Kim',
-    procedure: 'Abdominoplasty',
-    payer: 'Aetna HMO',
-    potential: 3200,
-    type: 'INN - Underpayment' as const,
-    action: 'Review & ignore' as const,
-    deadline: 'No formal deadline',
-    daysUntilDeadline: 999,
-  },
-];
-
-type DisputeTypeFilter = 'all' | 'oon' | 'inn';
-type ActionFilter = 'all' | 'negotiation' | 'idr' | 'appeal';
-type ChartView = 'all' | 'oon' | 'inn';
+interface WorkItem {
+  id: string;
+  type: WorkItemType;
+  step: WorkItemStep;
+  patientName: string;
+  description: string;
+  provider: string;
+  payer: string;
+  value: number;
+  valueLabel: string;
+  deadline: string;
+  urgency: 'high' | 'medium' | 'low';
+}
 
 interface TodayScreenProps {
   onOpenCase: (id: string) => void;
 }
 
+type TimeFilter = '7' | '14' | '30' | '90';
+type TypeFilter = 'all' | 'visits' | 'claims';
+type StepFilter = 'all' | 'to-record' | 'to-review' | 'ready-to-send' | 'flagged';
+
 export function TodayScreen({ onOpenCase }: TodayScreenProps) {
-  const [disputeTypeFilter, setDisputeTypeFilter] = useState<DisputeTypeFilter>('all');
-  const [actionFilter, setActionFilter] = useState<ActionFilter>('all');
-  const [chartView, setChartView] = useState<ChartView>('all');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('14');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [stepFilter, setStepFilter] = useState<StepFilter>('all');
 
-  const getTypeColor = (type: string) => {
-    // Simplified to just use slate for all types
-    return 'bg-slate-50/60 text-slate-600/85 border-slate-200/40';
-  };
+  // Mock work items
+  const workItems: WorkItem[] = [
+    {
+      id: '1',
+      type: 'visit',
+      step: 'to-record',
+      patientName: 'Maria Garcia',
+      description: 'Visit · Retina follow-up',
+      provider: 'Dr. Lee',
+      payer: 'Medicare',
+      value: 380,
+      valueLabel: 'Est. allowed',
+      deadline: 'Today · 10:30 AM',
+      urgency: 'high',
+    },
+    {
+      id: '2',
+      type: 'visit',
+      step: 'to-review',
+      patientName: 'J. Martinez',
+      description: 'Visit · Post-op check',
+      provider: 'Dr. Kim',
+      payer: 'Aetna PPO',
+      value: 540,
+      valueLabel: 'Est. allowed',
+      deadline: 'Needs review today',
+      urgency: 'high',
+    },
+    {
+      id: '3',
+      type: 'claim',
+      step: 'flagged',
+      patientName: 'S. Chen',
+      description: 'Claim #20411 · AMD injection',
+      provider: 'Dr. Lee',
+      payer: 'Humana PPO',
+      value: 720,
+      valueLabel: 'at risk',
+      deadline: 'Response due in 2 days',
+      urgency: 'medium',
+    },
+    {
+      id: '4',
+      type: 'visit',
+      step: 'ready-to-send',
+      patientName: 'Linda Brown',
+      description: 'Visit · Annual exam',
+      provider: 'Dr. Patel',
+      payer: 'UHC',
+      value: 295,
+      valueLabel: 'Est. allowed',
+      deadline: 'Approved today',
+      urgency: 'low',
+    },
+    {
+      id: '5',
+      type: 'claim',
+      step: 'flagged',
+      patientName: 'K. Williams',
+      description: 'Claim #18294 · Surgical procedure',
+      provider: 'Dr. Kim',
+      payer: 'BCBS',
+      value: 1450,
+      valueLabel: 'at risk',
+      deadline: 'Filing closes today',
+      urgency: 'high',
+    },
+  ];
 
-  const getActionColor = (action: string) => {
-    // Simplified color scheme based on design system
-    if (action === 'Generate IDR packet') return 'bg-orange-50/60 text-orange-700/85 border-orange-200/40 hover:bg-orange-100/60';
-    if (action === 'Generate negotiation letter') return 'bg-amber-50/70 text-amber-700/85 border-amber-200/40 hover:bg-amber-100/70';
-    if (action === 'Draft appeal') return 'bg-slate-50/60 text-slate-600/85 border-slate-200/40 hover:bg-slate-100/60';
-    if (action === 'Review & ignore') return 'bg-slate-50/60 text-slate-600/85 border-slate-200/40 hover:bg-slate-100/60';
-    return 'bg-slate-50/60 text-slate-600/85 border-slate-200/40 hover:bg-slate-100/60';
-  };
-
-  const getUrgencyColor = (days: number) => {
-    if (days <= 2) return 'text-[#101828] font-medium';
-    if (days <= 7) return 'text-[#101828]';
-    return 'text-[#4a5565]';
-  };
-
-  const getUrgencyIndicator = (days: number) => {
-    if (days <= 2) return { color: 'bg-red-500', show: true };
-    if (days <= 7) return { color: 'bg-amber-400', show: true };
-    return { color: 'bg-gray-300', show: false };
-  };
-
-  const filteredCases = mockCases.filter(c => {
-    // Dispute type filter
-    if (disputeTypeFilter === 'oon' && !c.type.startsWith('OON')) return false;
-    if (disputeTypeFilter === 'inn' && !c.type.startsWith('INN')) return false;
-    
-    // Action filter
-    if (actionFilter === 'negotiation' && c.action !== 'Generate negotiation letter') return false;
-    if (actionFilter === 'idr' && c.action !== 'Generate IDR packet') return false;
-    if (actionFilter === 'appeal' && c.action !== 'Draft appeal') return false;
-    
+  // Filter work items
+  const filteredItems = workItems.filter(item => {
+    if (typeFilter === 'visits' && item.type !== 'visit') return false;
+    if (typeFilter === 'claims' && item.type !== 'claim') return false;
+    if (stepFilter !== 'all' && item.step !== stepFilter) return false;
     return true;
+  }).sort((a, b) => {
+    // Sort by urgency first
+    const urgencyOrder = { high: 0, medium: 1, low: 2 };
+    if (urgencyOrder[a.urgency] !== urgencyOrder[b.urgency]) {
+      return urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
+    }
+    // Then by value
+    return b.value - a.value;
   });
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      
-      if (chartView === 'all') {
-        const oonRecovered = data.oonRecovered / 1000;
-        const oonOnTable = data.oonOnTable / 1000;
-        const innRecovered = data.innRecovered / 1000;
-        const innOnTable = data.innOnTable / 1000;
-        const total = oonRecovered + oonOnTable + innRecovered + innOnTable;
-
-        return (
-          <div className="bg-[#101828] text-white px-3 py-2 rounded-lg shadow-lg border border-gray-700">
-            <div className="text-[11px] font-medium mb-1.5">{data.week}</div>
-            <div className="space-y-0.5 text-[11px]">
-              <div className="flex justify-between gap-4">
-                <span className="text-white/70">OON Recovered</span>
-                <span className="font-medium">${oonRecovered.toFixed(1)}k</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-white/70">OON On table</span>
-                <span className="font-medium">${oonOnTable.toFixed(1)}k</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-white/70">INN Recovered</span>
-                <span className="font-medium">${innRecovered.toFixed(1)}k</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-white/70">INN On table</span>
-                <span className="font-medium">${innOnTable.toFixed(1)}k</span>
-              </div>
-              <div className="flex justify-between gap-4 pt-0.5 border-t border-white/20">
-                <span className="text-white/70">Total</span>
-                <span className="font-medium">${total.toFixed(1)}k</span>
-              </div>
-            </div>
-          </div>
-        );
-      } else if (chartView === 'oon') {
-        const recovered = data.oonRecovered / 1000;
-        const onTable = data.oonOnTable / 1000;
-        const total = recovered + onTable;
-
-        return (
-          <div className="bg-[#101828] text-white px-3 py-2 rounded-lg shadow-lg border border-gray-700">
-            <div className="text-[11px] font-medium mb-1">{data.week}</div>
-            <div className="space-y-0.5 text-[11px]">
-              <div className="flex justify-between gap-3">
-                <span className="text-white/70">Recovered</span>
-                <span className="font-medium">${recovered.toFixed(1)}k</span>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-white/70">Still on table</span>
-                <span className="font-medium">${onTable.toFixed(1)}k</span>
-              </div>
-              <div className="flex justify-between gap-3 pt-0.5 border-t border-white/20">
-                <span className="text-white/70">Total OON</span>
-                <span className="font-medium">${total.toFixed(1)}k</span>
-              </div>
-            </div>
-          </div>
-        );
-      } else {
-        const recovered = data.innRecovered / 1000;
-        const onTable = data.innOnTable / 1000;
-        const total = recovered + onTable;
-
-        return (
-          <div className="bg-[#101828] text-white px-3 py-2 rounded-lg shadow-lg border border-gray-700">
-            <div className="text-[11px] font-medium mb-1">{data.week}</div>
-            <div className="space-y-0.5 text-[11px]">
-              <div className="flex justify-between gap-3">
-                <span className="text-white/70">Recovered</span>
-                <span className="font-medium">${recovered.toFixed(1)}k</span>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-white/70">Still on table</span>
-                <span className="font-medium">${onTable.toFixed(1)}k</span>
-              </div>
-              <div className="flex justify-between gap-3 pt-0.5 border-t border-white/20">
-                <span className="text-white/70">Total INN</span>
-                <span className="font-medium">${total.toFixed(1)}k</span>
-              </div>
-            </div>
-          </div>
-        );
-      }
+  const getStepPillStyle = (step: WorkItemStep, type: WorkItemType) => {
+    if (step === 'to-record') {
+      return 'bg-slate-50 text-slate-700 border-slate-200';
     }
+    if (step === 'to-review') {
+      return 'bg-slate-50 text-slate-700 border-slate-200';
+    }
+    if (step === 'ready-to-send') {
+      return 'bg-slate-50 text-slate-700 border-slate-200';
+    }
+    if (step === 'flagged') {
+      return 'bg-amber-50 text-amber-700 border-amber-200';
+    }
+    return 'bg-gray-50 text-gray-700 border-gray-200';
+  };
+
+  const getStepLabel = (step: WorkItemStep, type: WorkItemType) => {
+    const prefix = type === 'visit' ? 'Visit' : 'Claim';
+    if (step === 'to-record') return `${prefix} · To record`;
+    if (step === 'to-review') return `${prefix} · To review`;
+    if (step === 'ready-to-send') return `${prefix} · Ready to send`;
+    if (step === 'flagged') return `${prefix} · Flagged`;
+    return prefix;
+  };
+
+  const getStepIcon = (step: WorkItemStep) => {
+    if (step === 'to-record') return <Mic className="size-3" />;
+    if (step === 'to-review') return <FileText className="size-3" />;
+    if (step === 'flagged') return <AlertTriangle className="size-3" />;
     return null;
   };
 
-  const getChartData = () => {
-    if (chartView === 'oon') return chartDataOON;
-    if (chartView === 'inn') return chartDataINN;
-    return chartDataAll;
+  const getUrgencyDot = (urgency: 'high' | 'medium' | 'low') => {
+    if (urgency === 'high') return 'bg-red-500';
+    if (urgency === 'medium') return 'bg-amber-400';
+    return 'bg-gray-300';
+  };
+
+  // Generate chart data based on selected time filter
+  const chartData = generateVoiceToCashData(parseInt(timeFilter));
+
+  // Custom tooltip for voice-to-cash chart
+  const VoiceToCashTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      const total = data.sent + data.recorded + data.flagged + data.notCaptured;
+
+      return (
+        <div className="bg-[#101828] text-white px-3 py-2.5 rounded-lg shadow-lg border border-gray-700">
+          <div className="text-[11px] font-medium mb-1.5">
+            {data.dayLabel} {data.dateLabel}
+          </div>
+          <div className="space-y-0.5 text-[11px]">
+            <div className="flex justify-between gap-4 pb-1 border-b border-white/20">
+              <span className="text-white/70">Total est. allowed:</span>
+              <span className="font-medium">${(total / 1000).toFixed(1)}k</span>
+            </div>
+            {data.sent > 0 && (
+              <div className="flex justify-between gap-4">
+                <span className="text-white/70">Sent to Athena</span>
+                <span className="font-medium">${(data.sent / 1000).toFixed(1)}k</span>
+              </div>
+            )}
+            {data.recorded > 0 && (
+              <div className="flex justify-between gap-4">
+                <span className="text-white/70">Recorded & coded</span>
+                <span className="font-medium">${(data.recorded / 1000).toFixed(1)}k</span>
+              </div>
+            )}
+            {data.flagged > 0 && (
+              <div className="flex justify-between gap-4">
+                <span className="text-white/70">Flagged / at risk</span>
+                <span className="font-medium">${(data.flagged / 1000).toFixed(1)}k</span>
+              </div>
+            )}
+            {data.notCaptured > 0 && (
+              <div className="flex justify-between gap-4">
+                <span className="text-white/70">Not captured</span>
+                <span className="font-medium">${(data.notCaptured / 1000).toFixed(1)}k</span>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
     <div className="overflow-auto size-full bg-[#f5f5f7]">
       <div className="max-w-[1400px] mx-auto px-[60px] py-[32px] pb-[60px]">
         
-        {/* Hero Card: Potential Recovery */}
-        <div className="bg-white relative rounded-[14px] shrink-0 w-full mb-6">
-          <div aria-hidden="true" className="absolute border border-gray-100 border-solid inset-0 pointer-events-none rounded-[14px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]" />
-          <div className="size-full">
-            <div className="box-border content-stretch flex flex-col gap-[24px] items-start px-[33px] py-[25px] relative w-full">
-              
-              {/* KPI Header */}
-              <div className="flex flex-col gap-3 w-full">
-                <div className="flex flex-col gap-1">
-                  <div className="text-[10px] text-[#99A1AF] tracking-[0.05em] uppercase font-medium">
-                    Total potential recovery · Last 90 days
-                  </div>
-                  <div className="text-[42px] font-semibold text-[#101828] tracking-[-0.02em] leading-[1.1]">
-                    $83,400
-                  </div>
-                </div>
-                
-                {/* Breakdown by type */}
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] text-[#4a5565]">$48,200</span>
-                    <span className="text-[12px] text-[#6a7282]">from OON / NSA / IDR</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] text-[#4a5565]">$35,200</span>
-                    <span className="text-[12px] text-[#6a7282]">from In-network denials/underpayments</span>
-                  </div>
+        {/* Card 1: Voice-to-cash over time */}
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
+          
+          {/* Header */}
+          <div className="flex items-center justify-between px-8 py-6 border-b border-gray-200">
+            <div>
+              <h2 className="text-[16px] font-semibold text-[#101828] tracking-[-0.02em] mb-1">
+                Voice-to-cash over time
+              </h2>
+              <p className="text-[12px] text-[#6a7282]">
+                Daily estimated allowed amounts by pipeline stage
+              </p>
+            </div>
+            <div className="relative">
+              <select
+                value={timeFilter}
+                onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
+                className="appearance-none px-3 py-1.5 pr-8 bg-white border border-gray-300 rounded-lg text-[13px] text-[#101828] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+              >
+                <option value="7">Last 7 days</option>
+                <option value="14">Last 14 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="90">Last 90 days</option>
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-[#6a7282] pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Summary Stats */}
+          <div className="px-8 pt-5 pb-2">
+            <div className="flex items-center gap-6 text-[12px]">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[#6a7282]">Sent:</span>
+                <span className="font-medium text-[#047857]">68%</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[#6a7282]">Pending:</span>
+                <span className="font-medium text-[#10b981]">$42.3k</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[#6a7282]">At risk:</span>
+                <span className="font-medium text-[#6ee7b7]">$8.1k</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[#6a7282]">Missed:</span>
+                <span className="font-medium text-[#d1fae5]">$3.2k</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Chart */}
+          <div className="px-8 pb-6">
+            <div className="w-full h-[240px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart 
+                  data={chartData} 
+                  barSize={parseInt(timeFilter) === 7 ? 48 : parseInt(timeFilter) === 14 ? 32 : parseInt(timeFilter) === 30 ? 16 : 7}
+                  barGap={2} 
+                  margin={{ top: 0, right: 0, bottom: 0, left: -20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} strokeOpacity={0.5} />
+                  <XAxis 
+                    dataKey="dateLabel" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#99A1AF', fontSize: 10 }}
+                    height={20}
+                    interval={parseInt(timeFilter) === 7 ? 0 : parseInt(timeFilter) === 14 ? 0 : parseInt(timeFilter) === 30 ? 4 : 14}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#99A1AF', fontSize: 10 }} 
+                    tickFormatter={(value) => `$${value / 1000}k`}
+                  />
+                  <Tooltip content={<VoiceToCashTooltip />} cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} />
+                  <Bar dataKey="sent" stackId="a" fill="#047857" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="recorded" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="flagged" stackId="a" fill="#6ee7b7" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="notCaptured" stackId="a" fill="#d1fae5" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Legend */}
+            <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-gray-200">
+              <div className="flex items-center gap-1.5">
+                <div className="size-3 rounded-sm bg-[#047857]" />
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] text-[#4a5565] font-medium">Sent to Athena</span>
+                  <span className="text-[10px] text-[#99A1AF]">· good</span>
                 </div>
               </div>
-
-              {/* Chart Section */}
-              <div className="w-full border-t border-gray-100 pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-[11px] text-[#99A1AF]">Recovered vs still on the table</span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setChartView('all')}
-                      className={`size-1.5 rounded-full ${chartView === 'all' ? 'bg-[#101828]' : 'bg-gray-200'}`}
-                    />
-                    <button
-                      onClick={() => setChartView('oon')}
-                      className={`size-1.5 rounded-full ${chartView === 'oon' ? 'bg-[#101828]' : 'bg-gray-200'}`}
-                    />
-                  </div>
+              <div className="flex items-center gap-1.5">
+                <div className="size-3 rounded-sm bg-[#10b981]" />
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] text-[#4a5565] font-medium">Recorded & coded</span>
+                  <span className="text-[10px] text-[#99A1AF]">· pending</span>
                 </div>
-
-                <div className="w-full h-[140px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={getChartData()} barGap={4} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                      <XAxis dataKey="week" axisLine={false} tickLine={false} tick={false} height={0} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#99A1AF', fontSize: 10 }} tickFormatter={(value) => `${value / 1000}k`} ticks={[0, 25000, 50000]} domain={[0, 50000]} />
-                      <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} />
-                      {chartView === 'all' ? (
-                        <>
-                          <Bar dataKey="oonRecovered" stackId="recovered" fill="#10b981" radius={[0, 0, 0, 0]} />
-                          <Bar dataKey="innRecovered" stackId="recovered" fill="#059669" radius={[2, 2, 0, 0]} />
-                          <Bar dataKey="oonOnTable" stackId="onTable" fill="#d1d5db" radius={[0, 0, 0, 0]} />
-                          <Bar dataKey="innOnTable" stackId="onTable" fill="#9ca3af" radius={[2, 2, 0, 0]} />
-                        </>
-                      ) : (
-                        <>
-                          <Bar dataKey="oonRecovered" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
-                          <Bar dataKey="oonOnTable" stackId="a" fill="#d1d5db" radius={[2, 2, 0, 0]} />
-                        </>
-                      )}
-                    </BarChart>
-                  </ResponsiveContainer>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="size-3 rounded-sm bg-[#6ee7b7]" />
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] text-[#4a5565] font-medium">Flagged / at risk</span>
+                  <span className="text-[10px] text-[#99A1AF]">· fix</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="size-3 rounded-sm bg-[#d1fae5]" />
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] text-[#4a5565] font-medium">Not captured</span>
+                  <span className="text-[10px] text-[#99A1AF]">· missed $$</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Cases to Act On Card */}
-        <div className="bg-white relative rounded-[14px] shrink-0 w-full">
-          <div aria-hidden="true" className="absolute border border-gray-100 border-solid inset-0 pointer-events-none rounded-[14px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]" />
-          <div className="size-full">
-            <div className="box-border content-stretch flex flex-col items-start px-[33px] py-[25px] relative w-full">
-              
-              {/* Card Header with Filters */}
-              <div className="flex flex-col gap-3 w-full mb-5">
-                <h2 className="text-[14px] font-medium text-[#101828] tracking-[-0.15px]">
-                  All cases to act on
-                </h2>
-                
-                {/* Two rows of filters */}
-                <div className="flex flex-col gap-2">
-                  {/* Row 1: Dispute type filter */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-[#99A1AF] uppercase tracking-wider min-w-[80px]">Type</span>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => setDisputeTypeFilter('all')}
-                        className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all ${
-                          disputeTypeFilter === 'all'
-                            ? 'bg-[#101828] text-white'
-                            : 'text-[#6a7282] hover:text-[#101828] hover:bg-gray-50 border border-gray-200'
-                        }`}
-                      >
-                        All
-                      </button>
-                      <button
-                        onClick={() => setDisputeTypeFilter('oon')}
-                        className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all ${
-                          disputeTypeFilter === 'oon'
-                            ? 'bg-[#101828] text-white'
-                            : 'text-[#6a7282] hover:text-[#101828] hover:bg-gray-50 border border-gray-200'
-                        }`}
-                      >
-                        OON / NSA
-                      </button>
-                      <button
-                        onClick={() => setDisputeTypeFilter('inn')}
-                        className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all ${
-                          disputeTypeFilter === 'inn'
-                            ? 'bg-[#101828] text-white'
-                            : 'text-[#6a7282] hover:text-[#101828] hover:bg-gray-50 border border-gray-200'
-                        }`}
-                      >
-                        In-network
-                      </button>
-                    </div>
-                  </div>
+        {/* Card 2: Work to do today */}
+        <div className="bg-white border border-gray-200 rounded-lg p-8">
+          
+          {/* Header */}
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h2 className="text-[16px] font-semibold text-[#101828] tracking-[-0.02em] mb-1">
+                Work to do today
+              </h2>
+              <p className="text-[12px] text-[#6a7282]">
+                Visits and claims that need attention in the next 24–48 hours
+              </p>
+            </div>
+            <div className="relative">
+              <select
+                className="appearance-none px-3 py-1.5 pr-8 bg-white border border-gray-300 rounded-lg text-[13px] text-[#101828] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+              >
+                <option value="today">Today</option>
+                <option value="next-7">Next 7 days</option>
+                <option value="all">All open</option>
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-[#6a7282] pointer-events-none" />
+            </div>
+          </div>
 
-                  {/* Row 2: Action filter */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-[#99A1AF] uppercase tracking-wider min-w-[80px]">Action</span>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => setActionFilter('all')}
-                        className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all ${
-                          actionFilter === 'all'
-                            ? 'bg-[#101828] text-white'
-                            : 'text-[#6a7282] hover:text-[#101828] hover:bg-gray-50 border border-gray-200'
-                        }`}
-                      >
-                        All
-                      </button>
-                      <button
-                        onClick={() => setActionFilter('negotiation')}
-                        className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all ${
-                          actionFilter === 'negotiation'
-                            ? 'bg-[#101828] text-white'
-                            : 'text-[#6a7282] hover:text-[#101828] hover:bg-gray-50 border border-gray-200'
-                        }`}
-                      >
-                        Needs negotiation
-                      </button>
-                      <button
-                        onClick={() => setActionFilter('idr')}
-                        className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all ${
-                          actionFilter === 'idr'
-                            ? 'bg-[#101828] text-white'
-                            : 'text-[#6a7282] hover:text-[#101828] hover:bg-gray-50 border border-gray-200'
-                        }`}
-                      >
-                        File IDR
-                      </button>
-                      <button
-                        onClick={() => setActionFilter('appeal')}
-                        className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all ${
-                          actionFilter === 'appeal'
-                            ? 'bg-[#101828] text-white'
-                            : 'text-[#6a7282] hover:text-[#101828] hover:bg-gray-50 border border-gray-200'
-                        }`}
-                      >
-                        Draft appeal
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Table */}
-              <div className="w-full overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="px-3 py-2.5 text-left">
-                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Patient</span>
-                      </th>
-                      <th className="px-3 py-2.5 text-left">
-                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Procedure</span>
-                      </th>
-                      <th className="px-3 py-2.5 text-left">
-                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Payer</span>
-                      </th>
-                      <th className="px-3 py-2.5 text-left">
-                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Type</span>
-                      </th>
-                      <th className="px-3 py-2.5 text-right">
-                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Potential</span>
-                      </th>
-                      <th className="px-3 py-2.5 text-left">
-                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase pl-6">Deadline</span>
-                      </th>
-                      <th className="px-3 py-2.5 text-left">
-                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Next Action</span>
-                      </th>
-                      <th className="px-3 py-2.5 text-right">
-                        <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Action</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCases.map((c) => (
-                      <tr 
-                        key={c.id} 
-                        onClick={() => onOpenCase(c.id)}
-                        className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors cursor-pointer"
-                      >
-                        <td className="px-3 py-3">
-                          <span className="text-[13px] font-medium text-[#101828] tracking-[-0.15px]">{c.patient}</span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <span className="text-[13px] text-[#4a5565] tracking-[-0.15px]">{c.procedure}</span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <span className="text-[13px] text-[#4a5565] tracking-[-0.15px]">{c.payer}</span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <span className={`inline-flex px-2 py-0.5 rounded text-[11px] font-medium border ${getTypeColor(c.type)}`}>
-                            {c.type}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-right">
-                          <span className="text-[13px] font-medium text-emerald-600 tracking-[-0.15px]">+${c.potential.toLocaleString()}</span>
-                        </td>
-                        <td className="px-3 py-3 pl-6">
-                          <div className="flex items-center gap-2">
-                            {getUrgencyIndicator(c.daysUntilDeadline).show && (
-                              <div className={`size-1.5 rounded-full ${getUrgencyIndicator(c.daysUntilDeadline).color}`} />
-                            )}
-                            <span className={`text-[12px] ${getUrgencyColor(c.daysUntilDeadline)} tracking-[-0.15px]`}>
-                              {c.deadline}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-3">
-                          <span className={`text-[12px] px-2 py-1 rounded ${getActionColor(c.action)}`}>
-                            {c.action}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-right">
-                          <button className="text-[#99A1AF] hover:text-[#101828] transition-colors">
-                            <ChevronRight className="size-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {/* Filter chips */}
+          <div className="flex items-center gap-4 mb-6 pb-5 border-b border-gray-200">
+            {/* TYPE filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-[#99A1AF] uppercase tracking-wider">Type</span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setTypeFilter('all')}
+                  className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all border ${
+                    typeFilter === 'all'
+                      ? 'bg-[#101828] text-white border-[#101828]'
+                      : 'text-[#6a7282] border-gray-200 hover:text-[#101828] hover:bg-gray-50'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setTypeFilter('visits')}
+                  className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all border ${
+                    typeFilter === 'visits'
+                      ? 'bg-[#101828] text-white border-[#101828]'
+                      : 'text-[#6a7282] border-gray-200 hover:text-[#101828] hover:bg-gray-50'
+                  }`}
+                >
+                  Visits
+                </button>
+                <button
+                  onClick={() => setTypeFilter('claims')}
+                  className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all border ${
+                    typeFilter === 'claims'
+                      ? 'bg-[#101828] text-white border-[#101828]'
+                      : 'text-[#6a7282] border-gray-200 hover:text-[#101828] hover:bg-gray-50'
+                  }`}
+                >
+                  Claims
+                </button>
               </div>
             </div>
+
+            {/* STEP filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-[#99A1AF] uppercase tracking-wider">Step</span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setStepFilter('all')}
+                  className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all border ${
+                    stepFilter === 'all'
+                      ? 'bg-[#101828] text-white border-[#101828]'
+                      : 'text-[#6a7282] border-gray-200 hover:text-[#101828] hover:bg-gray-50'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setStepFilter('to-record')}
+                  className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all border ${
+                    stepFilter === 'to-record'
+                      ? 'bg-[#101828] text-white border-[#101828]'
+                      : 'text-[#6a7282] border-gray-200 hover:text-[#101828] hover:bg-gray-50'
+                  }`}
+                >
+                  To record
+                </button>
+                <button
+                  onClick={() => setStepFilter('to-review')}
+                  className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all border ${
+                    stepFilter === 'to-review'
+                      ? 'bg-[#101828] text-white border-[#101828]'
+                      : 'text-[#6a7282] border-gray-200 hover:text-[#101828] hover:bg-gray-50'
+                  }`}
+                >
+                  To review
+                </button>
+                <button
+                  onClick={() => setStepFilter('ready-to-send')}
+                  className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all border ${
+                    stepFilter === 'ready-to-send'
+                      ? 'bg-[#101828] text-white border-[#101828]'
+                      : 'text-[#6a7282] border-gray-200 hover:text-[#101828] hover:bg-gray-50'
+                  }`}
+                >
+                  Ready to send
+                </button>
+                <button
+                  onClick={() => setStepFilter('flagged')}
+                  className={`px-3 py-1 rounded-md text-[12px] tracking-[-0.15px] transition-all border ${
+                    stepFilter === 'flagged'
+                      ? 'bg-[#101828] text-white border-[#101828]'
+                      : 'text-[#6a7282] border-gray-200 hover:text-[#101828] hover:bg-gray-50'
+                  }`}
+                >
+                  Flagged claims
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="w-full overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="px-3 py-2.5 text-left">
+                    <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Work item</span>
+                  </th>
+                  <th className="px-3 py-2.5 text-left">
+                    <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Type / Step</span>
+                  </th>
+                  <th className="px-3 py-2.5 text-left">
+                    <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Provider / Payer</span>
+                  </th>
+                  <th className="px-3 py-2.5 text-right">
+                    <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Value</span>
+                  </th>
+                  <th className="px-3 py-2.5 text-left">
+                    <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Deadline / Age</span>
+                  </th>
+                  <th className="px-3 py-2.5 text-right">
+                    <span className="text-[11px] text-[#6a7282] tracking-[0.05em] uppercase">Action</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems.map((item) => (
+                  <tr 
+                    key={item.id} 
+                    onClick={() => onOpenCase(item.id)}
+                    className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors cursor-pointer group"
+                  >
+                    <td className="px-3 py-3">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[13px] font-medium text-[#101828] tracking-[-0.15px]">
+                          {item.patientName}
+                        </span>
+                        <span className="text-[12px] text-[#6a7282] tracking-[-0.15px]">
+                          {item.description}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3">
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium border ${getStepPillStyle(item.step, item.type)}`}>
+                        {getStepIcon(item.step)}
+                        {getStepLabel(item.step, item.type)}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[13px] text-[#4a5565] tracking-[-0.15px]">
+                          {item.provider}
+                        </span>
+                        <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-[11px] font-medium w-fit">
+                          {item.payer}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span className={`text-[13px] font-medium tracking-[-0.15px] ${
+                          item.valueLabel === 'Est. allowed' ? 'text-emerald-700' : 'text-amber-700'
+                        }`}>
+                          {item.valueLabel === 'Est. allowed' ? '+' : ''}${item.value}
+                        </span>
+                        <span className="text-[11px] text-[#6a7282]">
+                          {item.valueLabel}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className={`size-1.5 rounded-full ${getUrgencyDot(item.urgency)}`} />
+                        <span className="text-[12px] text-[#4a5565] tracking-[-0.15px]">
+                          {item.deadline}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      <button className="text-[12px] text-[#101828] hover:text-[#1f2937] font-medium group-hover:underline flex items-center gap-1 ml-auto">
+                        {item.type === 'visit' ? 'Open visit' : 'Open claim'}
+                        <ChevronRight className="size-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 

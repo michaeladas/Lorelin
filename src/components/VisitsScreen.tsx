@@ -57,11 +57,11 @@ export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToAthena }: Vis
 
   const getStatusColor = (status: VisitStatus) => {
     switch (status) {
-      case 'to-record': return 'bg-blue-50 text-blue-600';
-      case 'transcribing': return 'bg-blue-100 text-blue-700';
-      case 'to-review': return 'bg-blue-100 text-blue-700';
-      case 'approved': return 'bg-blue-200 text-blue-800';
-      case 'sent': return 'bg-slate-200 text-slate-700';
+      case 'to-record': return 'bg-emerald-50 text-emerald-600';
+      case 'transcribing': return 'bg-emerald-100 text-emerald-600';
+      case 'to-review': return 'bg-emerald-100 text-emerald-700';
+      case 'approved': return 'bg-emerald-100 text-emerald-800';
+      case 'sent': return 'bg-slate-100 text-slate-600';
       default: return 'bg-gray-100 text-gray-700';
     }
   };
@@ -82,7 +82,7 @@ export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToAthena }: Vis
       return (
         <button
           onClick={() => onRecordVisit(visit.id)}
-          className="flex items-center justify-end gap-1.5 px-3 py-1.5 text-[12px] text-blue-600 hover:text-blue-700 font-medium ml-auto"
+          className="flex items-center justify-end gap-1.5 px-3 py-1.5 text-[12px] text-[#101828] hover:text-[#1f2937] font-medium ml-auto"
         >
           <Mic className="size-3.5" />
           Record
@@ -93,7 +93,7 @@ export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToAthena }: Vis
       return (
         <button
           onClick={() => onViewVisit(visit.id)}
-          className="px-3 py-1.5 text-[12px] text-blue-600 hover:text-blue-700 font-medium ml-auto"
+          className="px-3 py-1.5 text-[12px] text-[#101828] hover:text-[#1f2937] font-medium ml-auto"
         >
           Review
         </button>
@@ -103,7 +103,7 @@ export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToAthena }: Vis
       return (
         <button
           onClick={() => onSendToAthena(visit.id)}
-          className="px-3 py-1.5 text-[12px] text-blue-600 hover:text-blue-700 font-medium ml-auto whitespace-nowrap"
+          className="px-3 py-1.5 text-[12px] text-[#101828] hover:text-[#1f2937] font-medium ml-auto whitespace-nowrap"
         >
           Send to Athena
         </button>
@@ -175,17 +175,17 @@ export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToAthena }: Vis
             {/* Stats chips */}
             <div className="flex items-center gap-3 mb-4">
               <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg">
-                <div className="size-2 rounded-full bg-blue-400" />
+                <div className="size-2 rounded-full bg-emerald-500" />
                 <span className="text-[12px] text-[#6a7282]">To record:</span>
                 <span className="text-[13px] font-semibold text-[#101828]">{stats.toRecord}</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg">
-                <div className="size-2 rounded-full bg-blue-500" />
+                <div className="size-2 rounded-full bg-emerald-600" />
                 <span className="text-[12px] text-[#6a7282]">To review:</span>
                 <span className="text-[13px] font-semibold text-[#101828]">{stats.toReview}</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg">
-                <div className="size-2 rounded-full bg-blue-600" />
+                <div className="size-2 rounded-full bg-emerald-700" />
                 <span className="text-[12px] text-[#6a7282]">Approved:</span>
                 <span className="text-[13px] font-semibold text-[#101828]">{stats.approved}</span>
               </div>
@@ -200,17 +200,17 @@ export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToAthena }: Vis
             <div className="relative">
               <div className="flex h-3 rounded-full overflow-hidden bg-gray-200">
                 <div
-                  className="bg-blue-400 hover:bg-blue-500 transition-colors cursor-pointer"
+                  className="bg-emerald-500 hover:bg-emerald-600 transition-colors cursor-pointer"
                   style={{ width: `${(stats.toRecord / total) * 100}%` }}
                   title={`${stats.toRecord} / ${total} To record`}
                 />
                 <div
-                  className="bg-blue-500 hover:bg-blue-600 transition-colors cursor-pointer"
+                  className="bg-emerald-600 hover:bg-emerald-700 transition-colors cursor-pointer"
                   style={{ width: `${(stats.toReview / total) * 100}%` }}
                   title={`${stats.toReview} / ${total} To review`}
                 />
                 <div
-                  className="bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer"
+                  className="bg-emerald-700 hover:bg-emerald-800 transition-colors cursor-pointer"
                   style={{ width: `${(stats.approved / total) * 100}%` }}
                   title={`${stats.approved} / ${total} Approved`}
                 />
@@ -239,7 +239,7 @@ export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToAthena }: Vis
               >
                 To record
                 {stats.toRecord > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[11px] font-medium">
+                  <span className="ml-2 px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[11px] font-medium">
                     {stats.toRecord}
                   </span>
                 )}
@@ -254,7 +254,7 @@ export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToAthena }: Vis
               >
                 To review
                 {stats.toReview > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[11px] font-medium">
+                  <span className="ml-2 px-1.5 py-0.5 bg-emerald-200 text-emerald-800 rounded text-[11px] font-medium">
                     {stats.toReview}
                   </span>
                 )}
@@ -269,7 +269,7 @@ export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToAthena }: Vis
               >
                 Approved
                 {stats.approved > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 bg-blue-200 text-blue-800 rounded text-[11px] font-medium">
+                  <span className="ml-2 px-1.5 py-0.5 bg-emerald-300 text-emerald-900 rounded text-[11px] font-medium">
                     {stats.approved}
                   </span>
                 )}

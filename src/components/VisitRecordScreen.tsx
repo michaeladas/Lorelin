@@ -152,7 +152,7 @@ export function VisitRecordScreen({ onBack }: VisitRecordScreenProps) {
           {/* Main 2-column body */}
           <div className="grid grid-cols-[1fr_auto] gap-6">
             {/* Left column: Recording card (~60%) */}
-            <div className="min-w-0">
+            <div className="min-w-0 space-y-6">
               <div className="bg-white border border-gray-200 rounded-lg p-8">
                 <h2 className="text-[16px] font-semibold text-[#101828] mb-6">
                   Record this visit
@@ -293,6 +293,26 @@ export function VisitRecordScreen({ onBack }: VisitRecordScreenProps) {
                     </button>
                   </div>
                 )}
+              </div>
+
+              {/* Manual notes */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <h3 className="text-[14px] font-semibold text-[#101828] mb-4">
+                  Manual notes
+                </h3>
+                <div>
+                  <label className="block text-[11px] text-[#6a7282] uppercase tracking-wider mb-2">
+                    Add notes about this visit
+                  </label>
+                  <textarea
+                    placeholder="Type any additional notes here..."
+                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-[#101828] placeholder:text-[#99A1AF] resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    rows={6}
+                  />
+                  <p className="text-[11px] text-[#6a7282] mt-2">
+                    These notes will be attached to the visit record but won't be sent to the payer.
+                  </p>
+                </div>
               </div>
             </div>
 
