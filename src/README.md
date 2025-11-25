@@ -60,12 +60,46 @@ Lorelin is designed specifically for medical billing professionals who need to e
 
 ## Tech Stack
 
-- **React** - UI framework
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Utility-first styling
-- **Lucide React** - Icon system
-- **React Hook Form** - Form management
-- **Recharts** - Data visualization
+### Frontend
+- **React 18** - Modern UI framework with hooks and concurrent features
+- **TypeScript** - Static type checking for improved code quality and developer experience
+- **Tailwind CSS v4** - Utility-first CSS framework for rapid UI development
+  - Custom design tokens defined in `/styles/globals.css`
+  - No config file needed (v4 feature)
+  - Responsive design utilities throughout
+
+### UI Components & Libraries
+- **Lucide React** - Comprehensive icon library with 1000+ icons
+- **React Hook Form v7.55.0** - Performant form management with validation
+- **Recharts** - Composable charting library for data visualization
+- **Sonner v2.0.3** - Toast notifications for user feedback
+- **Motion (Framer Motion)** - Animation library for smooth transitions
+
+### Development Tools
+- **Vite** - Next-generation frontend build tool
+- **ESM imports** - Modern JavaScript module system
+- **Hot Module Replacement** - Fast development iteration
+
+### Code Quality
+- **Strict TypeScript** - Full type safety across the application
+- **Component-based architecture** - Modular, reusable UI components
+- **Design system compliance** - Documented design tokens and component patterns
+
+### State Management
+- **React useState/useEffect** - Built-in hooks for local state
+- **Props drilling** - Explicit data flow for navigation and context
+- **Future consideration**: Context API or Redux for complex global state
+
+### Styling Approach
+- **Utility-first with Tailwind** - Inline utility classes for rapid development
+- **Custom CSS variables** - Design tokens in globals.css for consistency
+- **Typography scale** - Pre-defined font sizes, weights, and line heights
+- **Color discipline** - Strict palette: emerald (value), red (urgency), amber (warning), neutrals (UI)
+
+### Browser Support
+- Modern evergreen browsers (Chrome, Firefox, Safari, Edge)
+- ES2022+ JavaScript features
+- CSS Grid and Flexbox for layouts
 
 ## Project Structure
 
