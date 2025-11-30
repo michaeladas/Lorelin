@@ -18,6 +18,8 @@ import { VisitRecordScreen } from './components/VisitRecordScreen';
 import { VisitApprovedScreen } from './components/VisitApprovedScreen';
 import { EligibilityScreen } from './components/EligibilityScreen';
 import { PreVisitV2Screen } from './components/PreVisitV2Screen';
+import { DocumentationCodingScreen } from './components/DocumentationCodingScreen';
+import { ParserScreen } from './components/ParserScreen';
 
 function Text() {
   return (
@@ -79,10 +81,12 @@ function List({ currentView, onNavigate, onNavigateToEligibility, onNavigateToIn
       <Button label="Home" active={currentView === 'today'} onClick={() => onNavigate('today')} />
       <Button label="Pre-Visit" active={currentView === 'eligibility'} onClick={onNavigateToEligibility} />
       <Button label="Pre-Visit v2" active={currentView === 'pre-visit-v2'} onClick={() => onNavigate('pre-visit-v2' as any)} />
+      <Button label="Documentation & Coding" active={currentView === 'doc-coding'} onClick={() => onNavigate('doc-coding' as any)} />
       <Button label="Visits" active={currentView === 'visits' || currentView === 'visit-detail' || currentView === 'visit-record' || currentView === 'visit-approved'} onClick={() => onNavigate('visits')} />
       <Button label="Disputes" active={currentView === 'disputes' || currentView.startsWith('case-detail')} onClick={() => onNavigate('disputes')} />
       <Button label="Diagnostics" active={currentView === 'intake'} onClick={onNavigateToIntake} />
       <Button label="Templates" active={currentView === 'templates' || currentView.startsWith('template-')} onClick={onNavigateToTemplates} />
+      <Button label="Parser" active={currentView === 'parser'} onClick={() => onNavigate('parser' as any)} />
     </div>
   );
 }
@@ -200,7 +204,7 @@ function Sidebar({ currentView, onNavigate, onNavigateToEligibility, onNavigateT
 }
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'today' | 'disputes' | 'visits' | 'eligibility' | 'pre-visit-v2' | 'visit-detail' | 'visit-record' | 'visit-approved' | 'intake' | 'templates' | 'template-1' | 'template-2' | 'template-3' | 'template-4' | 'case-detail' | 'case-detail-idr' | 'case-detail-appeal' | 'design-system'>('today');
+  const [currentView, setCurrentView] = useState<'today' | 'disputes' | 'visits' | 'eligibility' | 'pre-visit-v2' | 'doc-coding' | 'parser' | 'visit-detail' | 'visit-record' | 'visit-approved' | 'intake' | 'templates' | 'template-1' | 'template-2' | 'template-3' | 'template-4' | 'case-detail' | 'case-detail-idr' | 'case-detail-appeal' | 'design-system'>('today');
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
 
   const handleOpenCase = (id: string) => {
@@ -230,7 +234,7 @@ export default function App() {
   };
 
   const handleViewVisit = (visitId: string) => {
-    setCurrentView('visit-detail');
+    setCurrentView('visit-approved');
   };
 
   const handleRecordVisit = (visitId: string) => {
@@ -238,7 +242,7 @@ export default function App() {
   };
 
   const handleSendToAthena = (visitId: string) => {
-    setCurrentView('visit-approved');
+    setCurrentView('visit-detail');
   };
 
   const handleBackToVisits = () => {
@@ -267,6 +271,10 @@ export default function App() {
           <EligibilityScreen />
         ) : currentView === 'pre-visit-v2' ? (
           <PreVisitV2Screen />
+        ) : currentView === 'doc-coding' ? (
+          <DocumentationCodingScreen />
+        ) : currentView === 'parser' ? (
+          <ParserScreen />
         ) : currentView === 'intake' ? (
           <IntakeScreen />
         ) : currentView === 'templates' ? (

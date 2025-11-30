@@ -8,7 +8,7 @@ type RiskFilter = 'all' | 'at-risk' | 'blocked';
 type StepFilter = 'all' | 'eligibility' | 'authorization' | 'estimate' | 'forms';
 
 type PreVisitRisk = 'ready' | 'at-risk' | 'blocked';
-type PreVisitStep = 'eligibility-pending' | 'eligibility-failed' | 'auth-needed' | 'auth-pending' | 'auth-approved' | 'estimate-not-sent' | 'forms-incomplete' | 'ready';
+type PreVisitStep = 'eligibility-pending' | 'eligibility-failed' | 'auth-needed' | 'auth-draft-ready' | 'auth-submitted' | 'auth-approved' | 'auth-denied' | 'estimate-not-sent' | 'forms-incomplete' | 'ready';
 
 type ModalType = 'eligibility' | 'preauth' | null;
 
@@ -81,7 +81,7 @@ export function PreVisitV2Screen() {
       id: '4',
       patientName: 'S. Chen',
       visitReason: 'Retina consultation',
-      step: 'estimate-not-sent',
+      step: 'auth-draft-ready',
       risk: 'at-risk',
       provider: 'Dr. Kim',
       payer: 'Humana PPO',
@@ -93,7 +93,7 @@ export function PreVisitV2Screen() {
       id: '5',
       patientName: 'Linda Brown',
       visitReason: 'AMD injection',
-      step: 'forms-incomplete',
+      step: 'auth-submitted',
       risk: 'at-risk',
       provider: 'Dr. Lee',
       payer: 'UHC',
@@ -105,12 +105,24 @@ export function PreVisitV2Screen() {
       id: '6',
       patientName: 'David Park',
       visitReason: 'Vision screening',
-      step: 'auth-pending',
-      risk: 'at-risk',
+      step: 'auth-approved',
+      risk: 'ready',
       provider: 'Dr. Patel',
       payer: 'Cigna PPO',
       visitDate: 'Nov 29',
       visitTime: '1:30 PM',
+      urgency: 'In 3 days',
+    },
+    {
+      id: '7',
+      patientName: 'R. Thompson',
+      visitReason: 'Corneal surgery',
+      step: 'auth-denied',
+      risk: 'blocked',
+      provider: 'Dr. Kim',
+      payer: 'Aetna HMO',
+      visitDate: 'Nov 29',
+      visitTime: '4:00 PM',
       urgency: 'In 3 days',
     },
   ];
@@ -126,29 +138,52 @@ export function PreVisitV2Screen() {
   });
 
   const getStepPillStyle = (step: PreVisitStep) => {
-    if (step === 'eligibility-pending' || step === 'auth-pending') {
+    // Eligibility states
+    if (step === 'eligibility-pending') {
       return 'bg-slate-50/60 text-slate-600/85 border-slate-200/40';
     }
-    if (step === 'eligibility-failed' || step === 'auth-needed') {
+    if (step === 'eligibility-failed') {
       return 'bg-orange-50/60 text-orange-700/85 border-orange-200/40';
     }
+    
+    // Auth states
+    if (step === 'auth-needed') {
+      return 'bg-orange-50/60 text-orange-700/85 border-orange-200/40';
+    }
+    if (step === 'auth-draft-ready') {
+      return 'bg-blue-50/60 text-blue-700/85 border-blue-200/40';
+    }
+    if (step === 'auth-submitted') {
+      return 'bg-slate-50/60 text-slate-600/85 border-slate-200/40';
+    }
+    if (step === 'auth-approved') {
+      return 'bg-emerald-50/60 text-emerald-700/85 border-emerald-200/40';
+    }
+    if (step === 'auth-denied') {
+      return 'bg-red-50/60 text-red-700/85 border-red-200/40';
+    }
+    
+    // Other states
     if (step === 'estimate-not-sent' || step === 'forms-incomplete') {
       return 'bg-amber-50/70 text-amber-700/85 border-amber-200/40';
     }
     if (step === 'ready') {
       return 'bg-emerald-50/60 text-emerald-700/85 border-emerald-200/40';
     }
+    
     return 'bg-slate-50/60 text-slate-600/85 border-slate-200/40';
   };
 
   const getStepLabel = (step: PreVisitStep) => {
-    if (step === 'eligibility-pending') return 'Eligibility · Pending';
-    if (step === 'eligibility-failed') return 'Eligibility · Failed';
-    if (step === 'auth-needed') return 'Authorization · Needed';
-    if (step === 'auth-pending') return 'Authorization · Pending';
-    if (step === 'auth-approved') return 'Authorization · Approved';
-    if (step === 'estimate-not-sent') return 'Estimate · Not sent';
-    if (step === 'forms-incomplete') return 'Forms · Incomplete';
+    if (step === 'eligibility-pending') return 'Eligibility – Pending';
+    if (step === 'eligibility-failed') return 'Eligibility – Failed';
+    if (step === 'auth-needed') return 'Auth – Needed';
+    if (step === 'auth-draft-ready') return 'Auth – Draft ready';
+    if (step === 'auth-submitted') return 'Auth – Submitted';
+    if (step === 'auth-approved') return 'Auth – Approved';
+    if (step === 'auth-denied') return 'Auth – Denied';
+    if (step === 'estimate-not-sent') return 'Estimate – Not sent';
+    if (step === 'forms-incomplete') return 'Forms – Incomplete';
     if (step === 'ready') return 'Ready';
     return step;
   };
@@ -162,8 +197,27 @@ export function PreVisitV2Screen() {
         </span>
       );
     }
-    if (step === 'eligibility-pending' || step === 'eligibility-failed') return 'Run eligibility';
-    if (step === 'auth-needed' || step === 'auth-pending') return 'Start auth';
+    
+    // Eligibility actions
+    if (step === 'eligibility-pending' || step === 'eligibility-failed') {
+      return 'Run eligibility';
+    }
+    
+    // Auth actions
+    if (step === 'auth-needed' || step === 'auth-draft-ready') {
+      return 'Open auth workspace';
+    }
+    if (step === 'auth-submitted') {
+      return 'Log decision';
+    }
+    if (step === 'auth-approved') {
+      return 'View packet';
+    }
+    if (step === 'auth-denied') {
+      return 'View packet';
+    }
+    
+    // Other actions
     if (step === 'ready') return 'Open visit';
     return 'View details';
   };
@@ -180,12 +234,32 @@ export function PreVisitV2Screen() {
       return;
     }
     
+    // Eligibility actions - expand shelf
     if (step === 'eligibility-pending' || step === 'eligibility-failed') {
       setExpandedRowId(itemId);
       setExpandedType('eligibility');
-    } else if (step === 'auth-needed' || step === 'auth-pending') {
+      return;
+    }
+    
+    // Auth actions - expand shelf for needed/draft-ready
+    if (step === 'auth-needed' || step === 'auth-draft-ready') {
       setExpandedRowId(itemId);
       setExpandedType('preauth');
+      return;
+    }
+    
+    // For auth-submitted, auth-approved, auth-denied - just log for now
+    // In a real app, these would open a modal or detail view
+    if (step === 'auth-submitted') {
+      console.log('Opening log decision modal for', itemId);
+      // TODO: Open modal to mark as Approved/Denied
+      return;
+    }
+    
+    if (step === 'auth-approved' || step === 'auth-denied') {
+      console.log('Opening auth packet view for', itemId);
+      // TODO: Open read-only packet view
+      return;
     }
   };
 
@@ -569,7 +643,11 @@ export function PreVisitV2Screen() {
                       <td className="px-3 py-3 text-right">
                         <button
                           onClick={(e) => handleActionClick(e, item.id, item.step)}
-                          className="inline-flex items-center gap-1 text-[13px] text-[#4a5565] hover:text-[#101828] transition-colors group-hover:text-[#101828]"
+                          className={`inline-flex items-center gap-1 text-[13px] transition-colors ${
+                            item.step === 'auth-approved'
+                              ? 'text-[#99A1AF] cursor-default'
+                              : 'text-[#4a5565] hover:text-[#101828] group-hover:text-[#101828]'
+                          }`}
                         >
                           <span>{getActionLabel(item.step, item.id)}</span>
                           {!runningItems.includes(item.id) && <ChevronRight className="size-3.5" />}
