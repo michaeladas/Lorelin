@@ -164,3 +164,144 @@ export async function updateWorkItem(id: string, data: Partial<WorkItem>) {
 export async function initWorkItems() {
   return apiCall('/init-work-items', 'POST');
 }
+
+// ============================================================================
+// AUTHORIZATIONS API
+// ============================================================================
+
+export interface Authorization {
+  id: string;
+  visit_id?: string;
+  patient_name: string;
+  patient_id?: string;
+  patient_dob?: string;
+  provider?: string;
+  payer: string;
+  plan_id?: string;
+  visit_date?: string;
+  visit_time?: string;
+  visit_reason?: string;
+  procedure_type?: string;
+  location?: string;
+  status: 'needed' | 'draft-ready' | 'submitting' | 'submitted' | 'approved' | 'denied';
+  clinical_justification?: string;
+  cpt_codes?: Array<{ code: string; description: string }>;
+  icd10_codes?: Array<{ code: string; description: string }>;
+  notes?: string;
+  submitted_date?: string;
+  submitted_by?: string;
+  submission_method?: string;
+  pa_id?: string;
+  valid_from?: string;
+  valid_to?: string;
+  approved_date?: string;
+  approved_by?: string;
+  denied_date?: string;
+  denied_reason?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getAuthorizations() {
+  return apiCall('/authorizations');
+}
+
+export async function getAuthorization(id: string) {
+  return apiCall(`/authorizations/${id}`);
+}
+
+export async function getAuthorizationsByVisit(visitId: string) {
+  return apiCall(`/authorizations/by-visit/${visitId}`);
+}
+
+export async function createAuthorization(data: Partial<Authorization>) {
+  return apiCall('/authorizations', 'POST', data);
+}
+
+export async function updateAuthorization(id: string, data: Partial<Authorization>) {
+  return apiCall(`/authorizations/${id}`, 'PUT', data);
+}
+
+export async function deleteAuthorization(id: string) {
+  return apiCall(`/authorizations/${id}`, 'DELETE');
+}
+
+// ============================================================================
+// ELIGIBILITIES API
+// ============================================================================
+
+export interface EligibilityHistoryEntry {
+  timestamp: string;
+  status: 'verified' | 'failed';
+  method: 'lorelin' | 'manual';
+  note: string;
+}
+
+export interface EligibilityResult {
+  status: string;
+  planName: string;
+  effectiveDates: string;
+  officeVisitCopay?: string;
+  deductibleRemaining?: string;
+  oopRemaining?: string;
+  coverage?: Array<{ service: string; responsibility: string }>;
+}
+
+export interface Eligibility {
+  id: string;
+  visit_id?: string;
+  patient_name: string;
+  patient_id?: string;
+  patient_dob?: string;
+  patient_sex?: string;
+  provider?: string;
+  payer: string;
+  plan_id?: string;
+  member_id?: string;
+  group_number?: string;
+  visit_date?: string;
+  visit_time?: string;
+  visit_reason?: string;
+  service_type?: string;
+  location?: string;
+  benefit_type?: string;
+  status: 'pending' | 'verified' | 'failed';
+  lorelin_available?: boolean;
+  current_result?: EligibilityResult;
+  history?: EligibilityHistoryEntry[];
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getEligibilities() {
+  return apiCall('/eligibilities');
+}
+
+export async function getEligibility(id: string) {
+  return apiCall(`/eligibilities/${id}`);
+}
+
+export async function getEligibilitiesByVisit(visitId: string) {
+  return apiCall(`/eligibilities/by-visit/${visitId}`);
+}
+
+export async function createEligibility(data: Partial<Eligibility>) {
+  return apiCall('/eligibilities', 'POST', data);
+}
+
+export async function updateEligibility(id: string, data: Partial<Eligibility>) {
+  return apiCall(`/eligibilities/${id}`, 'PUT', data);
+}
+
+export async function deleteEligibility(id: string) {
+  return apiCall(`/eligibilities/${id}`, 'DELETE');
+}
+
+export async function runEligibilityCheck(id: string) {
+  return apiCall(`/eligibilities/${id}/check`, 'POST');
+}
+
+export async function recordManualVerification(id: string, result: 'verified' | 'failed', notes?: string, copay?: string, deductible?: string) {
+  return apiCall(`/eligibilities/${id}/manual`, 'POST', { result, notes, copay, deductible });
+}
