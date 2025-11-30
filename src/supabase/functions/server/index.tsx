@@ -853,46 +853,6 @@ app.post("/make-server-e8ce19db/init-disputes", async (c) => {
         path_tooltip: 'Paid below contract rate',
         is_urgent: true,
       },
-      {
-        patient_name: 'D. Thompson',
-        claim_id: 'Claim #18279',
-        procedure_name: 'Liposuction',
-        procedure_code: 'CPT 15876',
-        payer_name: 'Humana PPO',
-        plan_type: null,
-        billed: 7500,
-        paid: 2800,
-        potential: 2900,
-        type: 'OON - Negotiation',
-        path: 'State IDR',
-        issue: null,
-        status: 'In negotiation',
-        next_action: 'Generate negotiation letter',
-        deadline_date: addDays(25),
-        deadline_label: 'Negotiation period',
-        path_tooltip: 'State-regulated plan; in active negotiation phase',
-        is_urgent: false,
-      },
-      {
-        patient_name: 'R. Johnson',
-        claim_id: 'Claim #18275',
-        procedure_name: 'Blepharoplasty',
-        procedure_code: 'CPT 15822',
-        payer_name: 'Kaiser Permanente',
-        plan_type: null,
-        billed: 6400,
-        paid: 2200,
-        potential: 2100,
-        type: 'INN - Denial appeal',
-        path: 'Appeal only',
-        issue: 'Med necessity denial',
-        status: 'Draft in progress',
-        next_action: 'Review draft appeal',
-        deadline_date: addDays(40),
-        deadline_label: 'Appeal deadline',
-        path_tooltip: 'HMO denial; requires medical necessity documentation',
-        is_urgent: false,
-      },
     ];
 
     const { data, error } = await supabase
@@ -919,8 +879,8 @@ app.post("/make-server-e8ce19db/init-disputes", async (c) => {
 // Get all work items
 app.get("/make-server-e8ce19db/work-items", async (c) => {
   try {
-    const typeFilter = c.req.query('type'); // 'all', 'visits', 'claims'
-    const stepFilter = c.req.query('step'); // 'all', 'to-record', 'to-review', etc.
+    const typeFilter = c.req.query('type');
+    const stepFilter = c.req.query('step');
 
     let query = supabase
       .from('work_items')
@@ -928,15 +888,24 @@ app.get("/make-server-e8ce19db/work-items", async (c) => {
       .eq('completed', false);
 
     if (typeFilter && typeFilter !== 'all') {
-      const type = typeFilter === 'visits' ? 'visit' : 'claim';
-      query = query.eq('type', type);
+      if (typeFilter === 'visits') {
+        query = query.eq('type', 'visit');
+      } else if (typeFilter === 'claims') {
+        query = query.eq('type', 'claim');
+      }
     }
 
     if (stepFilter && stepFilter !== 'all') {
       query = query.eq('step', stepFilter);
     }
 
-    const { data, error } = await query.order('deadline', { ascending: true });
+    query = query.order('created_at', { ascending: false });
+
+    const { data, error } = await supabase
+      .from('work_items')
+      .select('*')
+      .eq('completed', false)
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching work items:', error);
@@ -993,139 +962,61 @@ app.post("/make-server-e8ce19db/init-work-items", async (c) => {
       return c.json({ message: 'Work items table already has data' });
     }
 
-    // Generate dynamic dates/times
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    
-    const createDeadline = (hoursFromNow: number) => {
-      const deadline = new Date(now);
-      deadline.setHours(deadline.getHours() + hoursFromNow);
-      return deadline.toISOString();
+    const today = new Date();
+    const addDays = (days: number) => {
+      const date = new Date(today);
+      date.setDate(date.getDate() + days);
+      return date.toISOString().split('T')[0];
     };
 
-    const formatDeadlineLabel = (hoursFromNow: number) => {
-      const deadline = new Date(now);
-      deadline.setHours(deadline.getHours() + hoursFromNow);
-      const hours = deadline.getHours();
-      const minutes = deadline.getMinutes();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const displayHour = hours % 12 || 12;
-      const displayMinute = minutes.toString().padStart(2, '0');
-      return `Today · ${displayHour}:${displayMinute} ${ampm}`;
-    };
-
-    // Sample work items data
+    // Sample work items
     const sampleWorkItems = [
       {
         type: 'visit',
         step: 'to-record',
-        patient_name: 'Maria Garcia',
-        description: 'Visit · Retina follow-up',
+        patient_name: 'Jane Doe',
+        description: 'Annual exam',
         provider: 'Dr. Lee',
         payer: 'Medicare',
-        value: 380,
-        value_label: 'Est. allowed',
-        deadline: createDeadline(2),
-        deadline_label: formatDeadlineLabel(2),
-        urgency: 'high',
+        value: 285,
+        value_label: '$285',
+        deadline: null,
+        deadline_label: null,
+        urgency: 'medium',
+        visit_id: null,
+        dispute_id: null,
         completed: false,
       },
       {
         type: 'visit',
-        step: 'to-record',
+        step: 'to-review',
         patient_name: 'John Smith',
-        description: 'Visit · Cataract post-op',
+        description: 'Post-op check',
         provider: 'Dr. Patel',
-        payer: 'Aetna',
-        value: 420,
-        value_label: 'Est. allowed',
-        deadline: createDeadline(4),
-        deadline_label: formatDeadlineLabel(4),
+        payer: 'BCBS',
+        value: 380,
+        value_label: '$380',
+        deadline: addDays(2),
+        deadline_label: 'Due in 2 days',
         urgency: 'high',
+        visit_id: null,
+        dispute_id: null,
         completed: false,
       },
       {
         type: 'claim',
-        step: 'to-review',
-        patient_name: 'Sarah Johnson',
-        description: 'Claim · Post-review',
-        provider: 'Dr. Lee',
-        payer: 'UHC',
-        value: 540,
-        value_label: 'Billed amount',
-        deadline: createDeadline(6),
-        deadline_label: formatDeadlineLabel(6),
-        urgency: 'medium',
-        completed: false,
-      },
-      {
-        type: 'visit',
         step: 'flagged',
-        patient_name: 'Michael Davis',
-        description: 'Visit · Coding issue flagged',
+        patient_name: 'K. Williams',
+        description: 'Facelift – Underpayment',
         provider: 'Dr. Kim',
         payer: 'BCBS',
-        value: 650,
-        value_label: 'Est. allowed',
-        deadline: createDeadline(1),
-        deadline_label: formatDeadlineLabel(1),
+        value: 300,
+        value_label: '$300',
+        deadline: addDays(28),
+        deadline_label: 'Appeal deadline',
         urgency: 'high',
-        completed: false,
-      },
-      {
-        type: 'claim',
-        step: 'ready-to-send',
-        patient_name: 'Linda Brown',
-        description: 'Claim · Ready to submit',
-        provider: 'Dr. Lee',
-        payer: 'Medicare',
-        value: 380,
-        value_label: 'Billed amount',
-        deadline: createDeadline(8),
-        deadline_label: formatDeadlineLabel(8),
-        urgency: 'medium',
-        completed: false,
-      },
-      {
-        type: 'visit',
-        step: 'to-record',
-        patient_name: 'David Wilson',
-        description: 'Visit · Annual exam',
-        provider: 'Dr. Patel',
-        payer: 'Cigna',
-        value: 295,
-        value_label: 'Est. allowed',
-        deadline: createDeadline(3),
-        deadline_label: formatDeadlineLabel(3),
-        urgency: 'medium',
-        completed: false,
-      },
-      {
-        type: 'claim',
-        step: 'to-review',
-        patient_name: 'K. Williams',
-        description: 'Claim · Authorization review',
-        provider: 'Dr. Kim',
-        payer: 'Aetna',
-        value: 720,
-        value_label: 'Billed amount',
-        deadline: createDeadline(12),
-        deadline_label: 'Tomorrow · 9:00 AM',
-        urgency: 'low',
-        completed: false,
-      },
-      {
-        type: 'visit',
-        step: 'to-record',
-        patient_name: 'J. Martinez',
-        description: 'Visit · Glaucoma check',
-        provider: 'Dr. Lee',
-        payer: 'Medicare',
-        value: 340,
-        value_label: 'Est. allowed',
-        deadline: createDeadline(5),
-        deadline_label: formatDeadlineLabel(5),
-        urgency: 'medium',
+        visit_id: null,
+        dispute_id: null,
         completed: false,
       },
     ];
@@ -1143,6 +1034,530 @@ app.post("/make-server-e8ce19db/init-work-items", async (c) => {
     return c.json({ message: 'Work items initialized successfully', count: data?.length });
   } catch (error) {
     console.error('Error in init-work-items:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// ============================================================================
+// AUTHORIZATIONS ENDPOINTS
+// ============================================================================
+
+// Get all authorizations
+app.get("/make-server-e8ce19db/authorizations", async (c) => {
+  try {
+    const { data, error } = await supabase
+      .from('authorizations')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching authorizations:', error);
+      return c.json({ error: error.message }, 500);
+    }
+
+    return c.json({ authorizations: data || [] });
+  } catch (error) {
+    console.error('Error in authorizations endpoint:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Get single authorization by ID
+app.get("/make-server-e8ce19db/authorizations/:id", async (c) => {
+  try {
+    const id = c.req.param('id');
+    
+    const { data, error } = await supabase
+      .from('authorizations')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching authorization:', error);
+      return c.json({ error: error.message }, 404);
+    }
+
+    return c.json({ authorization: data });
+  } catch (error) {
+    console.error('Error in authorization detail endpoint:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Get authorizations by visit ID
+app.get("/make-server-e8ce19db/authorizations/by-visit/:visitId", async (c) => {
+  try {
+    const visitId = c.req.param('visitId');
+    
+    const { data, error } = await supabase
+      .from('authorizations')
+      .select('*')
+      .eq('visit_id', visitId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching authorizations by visit:', error);
+      return c.json({ error: error.message }, 500);
+    }
+
+    return c.json({ authorizations: data || [] });
+  } catch (error) {
+    console.error('Error in authorizations by visit endpoint:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Create new authorization
+app.post("/make-server-e8ce19db/authorizations", async (c) => {
+  try {
+    const body = await c.req.json();
+    
+    const authRequest = {
+      id: body.id || `auth_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      visit_id: body.visitId || body.visit_id,
+      patient_name: body.patientName || body.patient_name,
+      patient_id: body.patientId || body.patient_id,
+      patient_dob: body.patientDob || body.patient_dob,
+      provider: body.provider,
+      payer: body.payer,
+      plan_id: body.planId || body.plan_id,
+      visit_date: body.visitDate || body.visit_date,
+      visit_time: body.visitTime || body.visit_time,
+      visit_reason: body.visitReason || body.visit_reason,
+      procedure_type: body.procedureType || body.procedure_type,
+      location: body.location,
+      status: body.status || 'needed',
+      clinical_justification: body.clinicalJustification || body.clinical_justification || '',
+      cpt_codes: body.cptCodes || body.cpt_codes || [],
+      icd10_codes: body.icd10Codes || body.icd10_codes || [],
+      notes: body.notes || '',
+      submitted_date: body.submittedDate || body.submitted_date || null,
+      submitted_by: body.submittedBy || body.submitted_by || null,
+      submission_method: body.submissionMethod || body.submission_method || null,
+      pa_id: body.paId || body.pa_id || null,
+      valid_from: body.validFrom || body.valid_from || null,
+      valid_to: body.validTo || body.valid_to || null,
+      approved_date: body.approvedDate || body.approved_date || null,
+      approved_by: body.approvedBy || body.approved_by || null,
+      denied_date: body.deniedDate || body.denied_date || null,
+      denied_reason: body.deniedReason || body.denied_reason || null,
+    };
+    
+    const { data, error } = await supabase
+      .from('authorizations')
+      .insert(authRequest)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating authorization:', error);
+      return c.json({ error: error.message }, 500);
+    }
+
+    return c.json({ authorization: data }, 201);
+  } catch (error) {
+    console.error('Error in create authorization endpoint:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Update authorization
+app.put("/make-server-e8ce19db/authorizations/:id", async (c) => {
+  try {
+    const id = c.req.param('id');
+    const body = await c.req.json();
+    
+    // Convert camelCase to snake_case for database
+    const updates: any = {
+      updated_at: new Date().toISOString(),
+    };
+    
+    // Map all possible fields
+    if (body.status !== undefined) updates.status = body.status;
+    if (body.clinicalJustification !== undefined) updates.clinical_justification = body.clinicalJustification;
+    if (body.clinical_justification !== undefined) updates.clinical_justification = body.clinical_justification;
+    if (body.cptCodes !== undefined) updates.cpt_codes = body.cptCodes;
+    if (body.cpt_codes !== undefined) updates.cpt_codes = body.cpt_codes;
+    if (body.icd10Codes !== undefined) updates.icd10_codes = body.icd10Codes;
+    if (body.icd10_codes !== undefined) updates.icd10_codes = body.icd10_codes;
+    if (body.notes !== undefined) updates.notes = body.notes;
+    if (body.submittedDate !== undefined) updates.submitted_date = body.submittedDate;
+    if (body.submitted_date !== undefined) updates.submitted_date = body.submitted_date;
+    if (body.submittedBy !== undefined) updates.submitted_by = body.submittedBy;
+    if (body.submitted_by !== undefined) updates.submitted_by = body.submitted_by;
+    if (body.submissionMethod !== undefined) updates.submission_method = body.submissionMethod;
+    if (body.submission_method !== undefined) updates.submission_method = body.submission_method;
+    if (body.paId !== undefined) updates.pa_id = body.paId;
+    if (body.pa_id !== undefined) updates.pa_id = body.pa_id;
+    if (body.validFrom !== undefined) updates.valid_from = body.validFrom;
+    if (body.valid_from !== undefined) updates.valid_from = body.valid_from;
+    if (body.validTo !== undefined) updates.valid_to = body.validTo;
+    if (body.valid_to !== undefined) updates.valid_to = body.valid_to;
+    if (body.approvedDate !== undefined) updates.approved_date = body.approvedDate;
+    if (body.approved_date !== undefined) updates.approved_date = body.approved_date;
+    if (body.approvedBy !== undefined) updates.approved_by = body.approvedBy;
+    if (body.approved_by !== undefined) updates.approved_by = body.approved_by;
+    if (body.deniedDate !== undefined) updates.denied_date = body.deniedDate;
+    if (body.denied_date !== undefined) updates.denied_date = body.denied_date;
+    if (body.deniedReason !== undefined) updates.denied_reason = body.deniedReason;
+    if (body.denied_reason !== undefined) updates.denied_reason = body.denied_reason;
+
+    const { data, error } = await supabase
+      .from('authorizations')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating authorization:', error);
+      return c.json({ error: error.message }, 500);
+    }
+
+    return c.json({ authorization: data });
+  } catch (error) {
+    console.error('Error in update authorization endpoint:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Delete authorization
+app.delete("/make-server-e8ce19db/authorizations/:id", async (c) => {
+  try {
+    const id = c.req.param('id');
+    
+    const { error } = await supabase
+      .from('authorizations')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting authorization:', error);
+      return c.json({ error: error.message }, 500);
+    }
+
+    return c.json({ message: 'Authorization deleted successfully' });
+  } catch (error) {
+    console.error('Error in delete authorization endpoint:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// ============================================================================
+// ELIGIBILITIES ENDPOINTS
+// ============================================================================
+
+// Get all eligibilities
+app.get("/make-server-e8ce19db/eligibilities", async (c) => {
+  try {
+    const { data, error } = await supabase
+      .from('eligibilities')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching eligibilities:', error);
+      return c.json({ error: error.message }, 500);
+    }
+
+    return c.json({ eligibilities: data || [] });
+  } catch (error) {
+    console.error('Error in eligibilities endpoint:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Get single eligibility by ID
+app.get("/make-server-e8ce19db/eligibilities/:id", async (c) => {
+  try {
+    const id = c.req.param('id');
+    
+    const { data, error } = await supabase
+      .from('eligibilities')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching eligibility:', error);
+      return c.json({ error: error.message }, 404);
+    }
+
+    return c.json({ eligibility: data });
+  } catch (error) {
+    console.error('Error in eligibility detail endpoint:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Get eligibilities by visit ID
+app.get("/make-server-e8ce19db/eligibilities/by-visit/:visitId", async (c) => {
+  try {
+    const visitId = c.req.param('visitId');
+    
+    const { data, error } = await supabase
+      .from('eligibilities')
+      .select('*')
+      .eq('visit_id', visitId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching eligibilities by visit:', error);
+      return c.json({ error: error.message }, 500);
+    }
+
+    return c.json({ eligibilities: data || [] });
+  } catch (error) {
+    console.error('Error in eligibilities by visit endpoint:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Create new eligibility
+app.post("/make-server-e8ce19db/eligibilities", async (c) => {
+  try {
+    const body = await c.req.json();
+    
+    const eligibilityCheck = {
+      id: body.id || `elig_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      visit_id: body.visitId || body.visit_id,
+      patient_name: body.patientName || body.patient_name,
+      patient_id: body.patientId || body.patient_id,
+      patient_dob: body.patientDob || body.patient_dob,
+      patient_sex: body.patientSex || body.patient_sex,
+      provider: body.provider,
+      payer: body.payer,
+      plan_id: body.planId || body.plan_id,
+      member_id: body.memberId || body.member_id,
+      group_number: body.groupNumber || body.group_number,
+      visit_date: body.visitDate || body.visit_date,
+      visit_time: body.visitTime || body.visit_time,
+      visit_reason: body.visitReason || body.visit_reason,
+      service_type: body.serviceType || body.service_type,
+      location: body.location,
+      benefit_type: body.benefitType || body.benefit_type || 'Medical benefits',
+      status: body.status || 'pending',
+      lorelin_available: body.loreleinAvailable !== false && body.lorelin_available !== false,
+      current_result: body.currentResult || body.current_result || null,
+      history: body.history || [],
+      notes: body.notes || '',
+    };
+    
+    const { data, error } = await supabase
+      .from('eligibilities')
+      .insert(eligibilityCheck)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating eligibility:', error);
+      return c.json({ error: error.message }, 500);
+    }
+
+    return c.json({ eligibility: data }, 201);
+  } catch (error) {
+    console.error('Error in create eligibility endpoint:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Update eligibility
+app.put("/make-server-e8ce19db/eligibilities/:id", async (c) => {
+  try {
+    const id = c.req.param('id');
+    const body = await c.req.json();
+    
+    const updates: any = {
+      updated_at: new Date().toISOString(),
+    };
+    
+    // Map all possible fields
+    if (body.status !== undefined) updates.status = body.status;
+    if (body.loreleinAvailable !== undefined) updates.lorelin_available = body.loreleinAvailable;
+    if (body.lorelin_available !== undefined) updates.lorelin_available = body.lorelin_available;
+    if (body.currentResult !== undefined) updates.current_result = body.currentResult;
+    if (body.current_result !== undefined) updates.current_result = body.current_result;
+    if (body.history !== undefined) updates.history = body.history;
+    if (body.notes !== undefined) updates.notes = body.notes;
+
+    const { data, error } = await supabase
+      .from('eligibilities')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating eligibility:', error);
+      return c.json({ error: error.message }, 500);
+    }
+
+    return c.json({ eligibility: data });
+  } catch (error) {
+    console.error('Error in update eligibility endpoint:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Delete eligibility
+app.delete("/make-server-e8ce19db/eligibilities/:id", async (c) => {
+  try {
+    const id = c.req.param('id');
+    
+    const { error } = await supabase
+      .from('eligibilities')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting eligibility:', error);
+      return c.json({ error: error.message }, 500);
+    }
+
+    return c.json({ message: 'Eligibility deleted successfully' });
+  } catch (error) {
+    console.error('Error in delete eligibility endpoint:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Run eligibility check (simulate API call)
+app.post("/make-server-e8ce19db/eligibilities/:id/check", async (c) => {
+  try {
+    const id = c.req.param('id');
+    
+    const { data: eligibility, error: fetchError } = await supabase
+      .from('eligibilities')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !eligibility) {
+      console.error('Error fetching eligibility:', fetchError);
+      return c.json({ error: 'Eligibility check not found' }, 404);
+    }
+    
+    // Simulate checking with payer - 80% success rate
+    const isSuccess = Math.random() > 0.2;
+    
+    const timestamp = new Date().toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+    
+    const newHistoryEntry = {
+      timestamp,
+      status: isSuccess ? 'verified' : 'failed',
+      method: 'lorelin',
+      note: isSuccess ? 'Real-time check via Lorelin' : 'Member ID not found'
+    };
+    
+    const updatedHistory = [newHistoryEntry, ...(eligibility.history || [])];
+    
+    const updates: any = {
+      status: isSuccess ? 'verified' : 'failed',
+      history: updatedHistory,
+      updated_at: new Date().toISOString(),
+    };
+    
+    if (isSuccess) {
+      updates.current_result = {
+        status: 'active',
+        planName: `${eligibility.payer} Plan`,
+        effectiveDates: '01/01/2025–12/31/2025',
+        officeVisitCopay: '$40',
+        deductibleRemaining: '$600'
+      };
+    }
+    
+    const { data: updated, error: updateError } = await supabase
+      .from('eligibilities')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating eligibility after check:', updateError);
+      return c.json({ error: updateError.message }, 500);
+    }
+
+    return c.json({ eligibility: updated });
+  } catch (error) {
+    console.error('Error running eligibility check:', error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Record manual verification
+app.post("/make-server-e8ce19db/eligibilities/:id/manual", async (c) => {
+  try {
+    const id = c.req.param('id');
+    const body = await c.req.json();
+    
+    const { data: eligibility, error: fetchError } = await supabase
+      .from('eligibilities')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !eligibility) {
+      console.error('Error fetching eligibility:', fetchError);
+      return c.json({ error: 'Eligibility check not found' }, 404);
+    }
+    
+    const timestamp = new Date().toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+    
+    const newHistoryEntry = {
+      timestamp,
+      status: body.result,
+      method: 'manual',
+      note: body.notes || 'Manual verification'
+    };
+    
+    const updatedHistory = [newHistoryEntry, ...(eligibility.history || [])];
+    
+    const updates: any = {
+      status: body.result,
+      history: updatedHistory,
+      updated_at: new Date().toISOString(),
+    };
+    
+    if (body.result === 'verified') {
+      updates.current_result = {
+        status: 'active',
+        planName: `${eligibility.payer} Plan`,
+        effectiveDates: '01/01/2025–12/31/2025',
+        officeVisitCopay: body.copay || '$40',
+        deductibleRemaining: body.deductible || '$600'
+      };
+    }
+    
+    const { data: updated, error: updateError } = await supabase
+      .from('eligibilities')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating eligibility after manual verification:', updateError);
+      return c.json({ error: updateError.message }, 500);
+    }
+
+    return c.json({ eligibility: updated });
+  } catch (error) {
+    console.error('Error recording manual verification:', error);
     return c.json({ error: String(error) }, 500);
   }
 });
