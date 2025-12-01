@@ -10,18 +10,22 @@ These SQL scripts transform your billing app from denormalized text fields to a 
 
 ## Scripts to Run (In Order)
 
-### 0. `00_CREATE_BASE_TABLES.sql` (Run this first if you get errors)
+### 0. `00_CREATE_ALL_BASE_TABLES.sql` ⚠️ **RUN THIS FIRST!**
 **What it does:**
-- Creates `authorizations` and `eligibilities` tables if they don't exist
-- These tables may already exist if you ran the SUPABASE_AUTH_ELIGIBILITY_SCHEMA.sql earlier
+- Creates ALL the base tables your app needs: `visits`, `authorizations`, `eligibilities`, `work_items`, `disputes`
+- These are the tables your backend code expects to exist
+- If you already ran parts of SUPABASE_SCHEMA.sql, this script will skip existing tables
 
-**When to run:**
-- If script #2 fails with "relation does not exist" error
-- Safe to run anytime (uses `IF NOT EXISTS`)
+**CRITICAL:** If you get "relation does not exist" errors, you MUST run this first!
 
 **Tables created:**
+- ✅ `visits` - Main visit records (was missing from SUPABASE_SCHEMA.sql!)
 - ✅ `authorizations` - Prior authorization workflow
 - ✅ `eligibilities` - Insurance verification workflow
+- ✅ `work_items` - Daily to-do list for billing staff
+- ✅ `disputes` - Payment dispute tracking
+
+**Safe to run multiple times:** Yes (uses `IF NOT EXISTS`)
 
 ---
 
@@ -86,7 +90,7 @@ These SQL scripts transform your billing app from denormalized text fields to a 
 
 1. Go to **Supabase Dashboard** → **SQL Editor**
 2. Run scripts in order:
-   - Copy contents of `00_CREATE_BASE_TABLES.sql` → Run
+   - Copy contents of `00_CREATE_ALL_BASE_TABLES.sql` → Run
    - Copy contents of `01_FINANCIAL_TABLES.sql` → Run
    - Copy contents of `02_ADD_FOREIGN_KEYS.sql` → Run
    - Copy contents of `03_MIGRATE_DATA.sql` → Run
@@ -97,7 +101,7 @@ These SQL scripts transform your billing app from denormalized text fields to a 
 
 You can concatenate all 4 files and run as one script:
 ```sql
--- Copy all of 00_CREATE_BASE_TABLES.sql
+-- Copy all of 00_CREATE_ALL_BASE_TABLES.sql
 -- Then all of 01_FINANCIAL_TABLES.sql
 -- Then all of 02_ADD_FOREIGN_KEYS.sql
 -- Then all of 03_MIGRATE_DATA.sql
