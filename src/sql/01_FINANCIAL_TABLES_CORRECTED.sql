@@ -1,7 +1,7 @@
 -- ============================================================================
 -- FINANCIAL TABLES WITH FOREIGN KEYS
 -- Part 1: Create tables that depend on base tables
--- REQUIRES: 00_CREATE_ALL_BASE_TABLES.sql to be run first
+-- REQUIRES: 00_CREATE_ALL_BASE_TABLES_CORRECTED.sql to be run first
 -- ============================================================================
 
 -- This script creates Layer 1 and Layer 2 tables:
