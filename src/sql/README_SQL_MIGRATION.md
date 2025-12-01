@@ -10,6 +10,21 @@ These SQL scripts transform your billing app from denormalized text fields to a 
 
 ## Scripts to Run (In Order)
 
+### 0. `00_CREATE_BASE_TABLES.sql` (Run this first if you get errors)
+**What it does:**
+- Creates `authorizations` and `eligibilities` tables if they don't exist
+- These tables may already exist if you ran the SUPABASE_AUTH_ELIGIBILITY_SCHEMA.sql earlier
+
+**When to run:**
+- If script #2 fails with "relation does not exist" error
+- Safe to run anytime (uses `IF NOT EXISTS`)
+
+**Tables created:**
+- ✅ `authorizations` - Prior authorization workflow
+- ✅ `eligibilities` - Insurance verification workflow
+
+---
+
 ### 1. `01_FINANCIAL_TABLES.sql`
 **What it does:**
 - Creates 6 new tables: `patients`, `providers`, `payers`, `charges`, `claims`, `payments`
@@ -71,17 +86,19 @@ These SQL scripts transform your billing app from denormalized text fields to a 
 
 1. Go to **Supabase Dashboard** → **SQL Editor**
 2. Run scripts in order:
+   - Copy contents of `00_CREATE_BASE_TABLES.sql` → Run
    - Copy contents of `01_FINANCIAL_TABLES.sql` → Run
    - Copy contents of `02_ADD_FOREIGN_KEYS.sql` → Run
    - Copy contents of `03_MIGRATE_DATA.sql` → Run
-3. After all 3 scripts complete:
+3. After all 4 scripts complete:
    - Go to **Settings** → **API** → Click **"Reload schema cache"**
 
 ### Option 2: All at Once
 
-You can concatenate all 3 files and run as one script:
+You can concatenate all 4 files and run as one script:
 ```sql
--- Copy all of 01_FINANCIAL_TABLES.sql
+-- Copy all of 00_CREATE_BASE_TABLES.sql
+-- Then all of 01_FINANCIAL_TABLES.sql
 -- Then all of 02_ADD_FOREIGN_KEYS.sql
 -- Then all of 03_MIGRATE_DATA.sql
 -- Run the combined script
@@ -129,7 +146,7 @@ claims table (NEW):
 
 ## Verification
 
-After running all 3 scripts, the migration script will output a summary:
+After running all 4 scripts, the migration script will output a summary:
 
 ```
 ============================================
