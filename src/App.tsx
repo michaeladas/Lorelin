@@ -18,10 +18,11 @@ import { VisitRecordScreen } from './components/VisitRecordScreen';
 import { VisitApprovedScreen } from './components/VisitApprovedScreen';
 import { EligibilityScreen } from './components/EligibilityScreen';
 import { PreVisitScreen } from './components/PreVisitV2Screen';
-import { DocumentationCodingScreen } from './components/DocumentationCodingScreen';
-import { ParserScreen } from './components/ParserScreen';
 import { AuthWorkspaceScreen } from './components/AuthWorkspaceScreen';
 import { EligibilityWorkspaceScreen } from './components/EligibilityWorkspaceScreen';
+import { DenialInsightsScreen } from './components/DenialInsightsScreen';
+import { PatientBalancesScreen } from './components/PatientBalancesScreen';
+import { BillDetailScreen } from './components/BillDetailScreen';
 
 function Text() {
   return (
@@ -82,12 +83,12 @@ function List({ currentView, onNavigate, onNavigateToPreVisit, onNavigateToIntak
     <div className="absolute content-stretch flex flex-col gap-[4px] items-start left-[12px] top-[80px] w-[232px]">
       <Button label="Home" active={currentView === 'today'} onClick={() => onNavigate('today')} />
       <Button label="Pre-Visit" active={currentView === 'pre-visit' || currentView === 'auth-workspace'} onClick={onNavigateToPreVisit} />
-      <Button label="Documentation & Coding" active={currentView === 'doc-coding'} onClick={() => onNavigate('doc-coding' as any)} />
       <Button label="Visits" active={currentView === 'visits' || currentView === 'visit-detail' || currentView === 'visit-record' || currentView === 'visit-approved'} onClick={() => onNavigate('visits')} />
       <Button label="Disputes" active={currentView === 'disputes' || currentView.startsWith('case-detail')} onClick={() => onNavigate('disputes')} />
+      <Button label="Denial Insights" active={currentView === 'denial-insights'} onClick={() => onNavigate('denial-insights' as any)} />
+      <Button label="Patient Balances" active={currentView === 'patient-balances'} onClick={() => onNavigate('patient-balances' as any)} />
       <Button label="Diagnostics" active={currentView === 'intake'} onClick={onNavigateToIntake} />
       <Button label="Templates" active={currentView === 'templates' || currentView.startsWith('template-')} onClick={onNavigateToTemplates} />
-      <Button label="Parser" active={currentView === 'parser'} onClick={() => onNavigate('parser' as any)} />
     </div>
   );
 }
@@ -205,9 +206,10 @@ function Sidebar({ currentView, onNavigate, onNavigateToPreVisit, onNavigateToIn
 }
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'today' | 'disputes' | 'visits' | 'pre-visit' | 'auth-workspace' | 'eligibility-workspace' | 'doc-coding' | 'parser' | 'visit-detail' | 'visit-record' | 'visit-approved' | 'intake' | 'templates' | 'template-1' | 'template-2' | 'template-3' | 'template-4' | 'case-detail' | 'case-detail-idr' | 'case-detail-appeal' | 'design-system'>('today');
+  const [currentView, setCurrentView] = useState<'today' | 'disputes' | 'denial-insights' | 'patient-balances' | 'bill-detail' | 'visits' | 'pre-visit' | 'auth-workspace' | 'eligibility-workspace' | 'visit-detail' | 'visit-record' | 'visit-approved' | 'intake' | 'templates' | 'template-1' | 'template-2' | 'template-3' | 'template-4' | 'case-detail' | 'case-detail-idr' | 'case-detail-appeal' | 'design-system'>('today');
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
-  const [authStatus, setAuthStatus] = useState<'needed' | 'draft-ready' | 'submitted' | 'approved' | 'denied'>('draft-ready');
+  const [selectedBillId, setSelectedBillId] = useState<string | null>(null);
+  const [authStatus, setAuthStatus] = useState<'needed' | 'submitted' | 'approved' | 'denied'>('needed');
   const [eligibilityData, setEligibilityData] = useState<any>(null);
 
   const handleOpenCase = (id: string) => {
@@ -244,7 +246,7 @@ export default function App() {
     setCurrentView('visit-record');
   };
 
-  const handleSendToAthena = (visitId: string) => {
+  const handleSendToEHR = (visitId: string) => {
     setCurrentView('visit-detail');
   };
 
@@ -252,7 +254,7 @@ export default function App() {
     setCurrentView('visits');
   };
 
-  const handleOpenAuthWorkspace = (status: 'needed' | 'draft-ready' | 'submitted' | 'approved' | 'denied' = 'draft-ready') => {
+  const handleOpenAuthWorkspace = (status: 'needed' | 'submitted' | 'approved' | 'denied' = 'needed') => {
     setAuthStatus(status);
     setCurrentView('auth-workspace');
   };
@@ -266,6 +268,16 @@ export default function App() {
     setCurrentView('pre-visit');
   };
 
+  const handleOpenBill = (id: string) => {
+    setSelectedBillId(id);
+    setCurrentView('bill-detail');
+  };
+
+  const handleBackToPatientBalances = () => {
+    setCurrentView('patient-balances');
+    setSelectedBillId(null);
+  };
+
   return (
     <div className="bg-[#f5f5f7] h-screen w-screen overflow-hidden flex">
       <Sidebar currentView={currentView} onNavigate={setCurrentView} onNavigateToPreVisit={() => setCurrentView('pre-visit')} onNavigateToIntake={() => setCurrentView('intake')} onNavigateToTemplates={() => setCurrentView('templates')} onNavigateToDesignSystem={() => setCurrentView('design-system')} />
@@ -275,7 +287,7 @@ export default function App() {
         {currentView === 'today' ? (
           <TodayScreen onOpenCase={handleOpenCase} onOpenVisit={handleViewVisit} />
         ) : currentView === 'visits' ? (
-          <VisitsScreen onViewVisit={handleViewVisit} onRecordVisit={handleRecordVisit} onSendToAthena={handleSendToAthena} />
+          <VisitsScreen onViewVisit={handleViewVisit} onRecordVisit={handleRecordVisit} onSendToEHR={handleSendToEHR} />
         ) : currentView === 'visit-detail' ? (
           <VisitDetailScreen onBack={handleBackToVisits} />
         ) : currentView === 'visit-record' ? (
@@ -284,16 +296,18 @@ export default function App() {
           <VisitApprovedScreen onBack={handleBackToVisits} />
         ) : currentView === 'disputes' ? (
           <DisputesScreen onOpenCase={handleOpenCase} />
+        ) : currentView === 'denial-insights' ? (
+          <DenialInsightsScreen />
+        ) : currentView === 'patient-balances' ? (
+          <PatientBalancesScreen onOpenBill={handleOpenBill} onBack={handleBackToPatientBalances} />
+        ) : currentView === 'bill-detail' ? (
+          <BillDetailScreen onBack={handleBackToPatientBalances} />
         ) : currentView === 'pre-visit' ? (
           <PreVisitScreen onOpenAuthWorkspace={handleOpenAuthWorkspace} onOpenEligibilityWorkspace={handleOpenEligibilityWorkspace} />
         ) : currentView === 'auth-workspace' ? (
           <AuthWorkspaceScreen onBack={handleBackToPreVisit} initialAuthStatus={authStatus} />
         ) : currentView === 'eligibility-workspace' ? (
           <EligibilityWorkspaceScreen onBack={handleBackToPreVisit} {...eligibilityData} />
-        ) : currentView === 'doc-coding' ? (
-          <DocumentationCodingScreen />
-        ) : currentView === 'parser' ? (
-          <ParserScreen />
         ) : currentView === 'intake' ? (
           <IntakeScreen />
         ) : currentView === 'templates' ? (

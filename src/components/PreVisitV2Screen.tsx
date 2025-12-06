@@ -8,7 +8,7 @@ type RiskFilter = 'all' | 'at-risk' | 'blocked';
 type StepFilter = 'all' | 'eligibility' | 'authorization' | 'estimate' | 'forms';
 
 type PreVisitRisk = 'ready' | 'at-risk' | 'blocked';
-type PreVisitStep = 'eligibility-pending' | 'eligibility-failed' | 'auth-needed' | 'auth-draft-ready' | 'auth-submitted' | 'auth-approved' | 'auth-denied' | 'estimate-not-sent' | 'forms-incomplete' | 'ready';
+type PreVisitStep = 'eligibility-pending' | 'eligibility-failed' | 'auth-needed' | 'auth-submitted' | 'auth-approved' | 'auth-denied' | 'estimate-not-sent' | 'forms-incomplete' | 'ready';
 
 type ModalType = 'eligibility' | 'preauth' | null;
 
@@ -30,7 +30,7 @@ interface PreVisitItem {
 }
 
 interface PreVisitScreenProps {
-  onOpenAuthWorkspace?: (status: 'needed' | 'draft-ready' | 'submitted' | 'approved' | 'denied') => void;
+  onOpenAuthWorkspace?: (status: 'needed' | 'submitted' | 'approved' | 'denied') => void;
   onOpenEligibilityWorkspace?: (data: any) => void;
 }
 
@@ -405,9 +405,6 @@ export function PreVisitScreen({ onOpenAuthWorkspace, onOpenEligibilityWorkspace
     if (step === 'auth-needed') {
       return 'bg-orange-50/60 text-orange-700/85 border-orange-200/40';
     }
-    if (step === 'auth-draft-ready') {
-      return 'bg-blue-50/60 text-blue-700/85 border-blue-200/40';
-    }
     if (step === 'auth-submitted') {
       return 'bg-slate-50/60 text-slate-600/85 border-slate-200/40';
     }
@@ -433,7 +430,6 @@ export function PreVisitScreen({ onOpenAuthWorkspace, onOpenEligibilityWorkspace
     if (step === 'eligibility-pending') return 'Eligibility – Pending';
     if (step === 'eligibility-failed') return 'Eligibility – Failed';
     if (step === 'auth-needed') return 'Auth – Needed';
-    if (step === 'auth-draft-ready') return 'Auth – Draft ready';
     if (step === 'auth-submitted') return 'Auth – Submitted';
     if (step === 'auth-approved') return 'Auth – Approved';
     if (step === 'auth-denied') return 'Auth – Denied';
@@ -459,7 +455,7 @@ export function PreVisitScreen({ onOpenAuthWorkspace, onOpenEligibilityWorkspace
     }
     
     // Auth actions
-    if (step === 'auth-needed' || step === 'auth-draft-ready') {
+    if (step === 'auth-needed') {
       return 'Open auth workspace';
     }
     if (step === 'auth-submitted') {
@@ -504,13 +500,6 @@ export function PreVisitScreen({ onOpenAuthWorkspace, onOpenEligibilityWorkspace
     if (step === 'auth-needed') {
       if (onOpenAuthWorkspace) {
         onOpenAuthWorkspace('needed');
-      }
-      return;
-    }
-    
-    if (step === 'auth-draft-ready') {
-      if (onOpenAuthWorkspace) {
-        onOpenAuthWorkspace('draft-ready');
       }
       return;
     }

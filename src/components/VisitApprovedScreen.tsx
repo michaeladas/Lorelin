@@ -59,7 +59,7 @@ export function VisitApprovedScreen({ onBack }: VisitApprovedScreenProps) {
 
           {/* Patient summary + pipeline */}
           <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-3 mb-1">
                   <h1 className="text-[20px] font-semibold text-[#101828] tracking-[-0.02em]">
@@ -79,59 +79,12 @@ export function VisitApprovedScreen({ onBack }: VisitApprovedScreenProps) {
                 </button>
               </div>
 
-              {/* Visit pipeline */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center size-7 rounded-full bg-gray-400 text-white">
-                    <CheckCircle2 className="size-4" />
-                  </div>
-                  <span className="text-[12px] text-[#6a7282]">Recorded</span>
-                </div>
-                
-                <div className="h-0.5 w-8 bg-gray-300" />
-                
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center size-7 rounded-full bg-gray-400 text-white">
-                    <CheckCircle2 className="size-4" />
-                  </div>
-                  <span className="text-[12px] text-[#6a7282]">Transcribed</span>
-                </div>
-                
-                <div className="h-0.5 w-8 bg-gray-400" />
-                
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center size-7 rounded-full bg-blue-600 text-white font-medium text-[12px]">
-                    3
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[12px] font-medium text-[#101828]">AI coding review</span>
-                    <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[9px] font-medium uppercase tracking-wide">
-                      AI
-                    </span>
-                  </div>
-                </div>
-                
-                <div className={`h-0.5 w-8 ${visitStatus === 'coded' ? 'bg-gray-400' : 'bg-gray-300'}`} />
-                
-                <div className="flex items-center gap-2">
-                  <div className={`flex items-center justify-center size-7 rounded-full ${
-                    visitStatus === 'coded' 
-                      ? 'bg-gray-400 text-white' 
-                      : 'bg-gray-200 text-[#6a7282]'
-                  } font-medium text-[12px]`}>
-                    {visitStatus === 'coded' ? <CheckCircle2 className="size-4" /> : '4'}
-                  </div>
-                  <span className="text-[12px] text-[#6a7282]">Ready to send</span>
-                </div>
-                
-                <div className="h-0.5 w-8 bg-gray-300" />
-                
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center size-7 rounded-full bg-gray-200 text-[#6a7282] font-medium text-[12px]">
-                    5
-                  </div>
-                  <span className="text-[12px] text-[#6a7282]">Sent</span>
-                </div>
+              {/* Right: Compact status badge */}
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-[#6a7282]">Step 4 of 5</span>
+                <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md text-[13px] font-medium">
+                  Ready to send
+                </span>
               </div>
             </div>
           </div>
@@ -662,7 +615,7 @@ export function VisitApprovedScreen({ onBack }: VisitApprovedScreenProps) {
                     </span>
                   </div>
                   <div className="text-[12px] text-emerald-800 mb-3">
-                    Ready to send to Athena in underlying PM
+                    Ready to send to EHR in underlying PM
                   </div>
                   <button className="text-[12px] text-emerald-700 hover:text-emerald-800 font-medium">
                     View coding summary →

@@ -6,10 +6,10 @@ interface AuthWorkspaceScreenProps {
   initialAuthStatus?: AuthStatus;
 }
 
-type AuthStatus = 'needed' | 'draft-ready' | 'submitting' | 'submitted' | 'approved' | 'denied';
+type AuthStatus = 'needed' | 'submitting' | 'submitted' | 'approved' | 'denied';
 type SubmitStatus = 'draft' | 'submitting' | 'success' | 'failure' | 'needs-mfa';
 
-export function AuthWorkspaceScreen({ onBack, initialAuthStatus = 'draft-ready' }: AuthWorkspaceScreenProps) {
+export function AuthWorkspaceScreen({ onBack, initialAuthStatus = 'needed' }: AuthWorkspaceScreenProps) {
   const [authStatus, setAuthStatus] = useState<AuthStatus>(initialAuthStatus);
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>(initialAuthStatus === 'submitted' || initialAuthStatus === 'approved' ? 'success' : 'draft');
   const [reviewedChecked, setReviewedChecked] = useState(false);
@@ -88,7 +88,7 @@ ${clinicalJustification}
         <div className="text-[11px] text-[#6a7282] uppercase tracking-[0.05em] mb-2">Demo Controls (dev only)</div>
         <div className="flex gap-2 flex-wrap">
           <button onClick={() => { setAuthStatus('needed'); setSubmitStatus('draft'); }} className="px-2 py-1 text-[11px] border border-gray-200 rounded hover:bg-gray-50">Auth Needed</button>
-          <button onClick={() => { setAuthStatus('draft-ready'); setSubmitStatus('draft'); }} className="px-2 py-1 text-[11px] border border-gray-200 rounded hover:bg-gray-50">Draft Ready</button>
+          <button onClick={() => { setAuthStatus('submitting'); setSubmitStatus('draft'); }} className="px-2 py-1 text-[11px] border border-gray-200 rounded hover:bg-gray-50">Submitting</button>
           <button onClick={() => { setAuthStatus('submitted'); setSubmitStatus('success'); }} className="px-2 py-1 text-[11px] border border-gray-200 rounded hover:bg-gray-50">Submitted</button>
           <button onClick={() => { setAuthStatus('approved'); setSubmitStatus('success'); setOverallReady(true); }} className="px-2 py-1 text-[11px] border border-gray-200 rounded hover:bg-gray-50">Approved</button>
           <button onClick={() => setSubmitStatus('failure')} className="px-2 py-1 text-[11px] border border-gray-200 rounded hover:bg-gray-50">Test Failure</button>

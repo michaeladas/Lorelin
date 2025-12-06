@@ -457,7 +457,7 @@ app.post("/make-server-e8ce19db/init-visits", async (c) => {
         charge_estimate: 420,
         member_id: 'HUM963852',
         group_number: 'GRP006',
-        pre_visit_step: 'auth-draft-ready',
+        pre_visit_step: 'auth-needed',
         pre_visit_risk: 'at-risk',
       },
       {

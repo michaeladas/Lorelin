@@ -30,11 +30,11 @@ export function DataSourceStep({ onSelect }: DataSourceStepProps) {
               <div className="size-[48px] rounded-lg bg-gray-100 flex items-center justify-center mb-5">
                 <Database className="size-6 text-[#4a5565]" />
               </div>
-              <h3 className="text-[15px] font-semibold text-[#101828] mb-2 tracking-[-0.02em]">
-                Connect billing system
+              <h3 className="text-[14px] font-semibold text-[#101828] mb-1 tracking-[-0.15px]">
+                Connect PM system
               </h3>
               <p className="text-[13px] text-[#6a7282] leading-[1.5] mb-4">
-                Direct integration with Athena, DrChrono, or other PM systems. Real-time sync, no manual uploads.
+                Direct integration with your EHR/PM systems. Real-time sync, no manual uploads.
               </p>
               <div className="flex items-center gap-2 text-[12px] text-[#6a7282] font-medium">
                 <span>Coming soon</span>

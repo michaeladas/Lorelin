@@ -31,7 +31,7 @@ export function VisitDetailScreen({ onBack }: VisitDetailScreenProps) {
 
           {/* Patient summary + pipeline on gray background */}
           <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between">
               {/* Left: Patient info */}
               <div>
                 <div className="flex items-center gap-3 mb-1">
@@ -52,50 +52,12 @@ export function VisitDetailScreen({ onBack }: VisitDetailScreenProps) {
                 </button>
               </div>
 
-              {/* Right: Visit pipeline */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center size-7 rounded-full bg-gray-400 text-white">
-                    <CheckCircle2 className="size-4" />
-                  </div>
-                  <span className="text-[12px] text-[#6a7282]">Recorded</span>
-                </div>
-                
-                <div className="h-0.5 w-8 bg-gray-300" />
-                
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center size-7 rounded-full bg-gray-400 text-white">
-                    <CheckCircle2 className="size-4" />
-                  </div>
-                  <span className="text-[12px] text-[#6a7282]">Transcribed</span>
-                </div>
-                
-                <div className="h-0.5 w-8 bg-gray-300" />
-                
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center size-7 rounded-full bg-blue-600 text-white font-medium text-[12px]">
-                    3
-                  </div>
-                  <span className="text-[12px] font-medium text-[#101828]">Coding review</span>
-                </div>
-                
-                <div className="h-0.5 w-8 bg-gray-300" />
-                
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center size-7 rounded-full bg-gray-200 text-[#6a7282] font-medium text-[12px]">
-                    4
-                  </div>
-                  <span className="text-[12px] text-[#6a7282]">Approved</span>
-                </div>
-                
-                <div className="h-0.5 w-8 bg-gray-300" />
-                
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center size-7 rounded-full bg-gray-200 text-[#6a7282] font-medium text-[12px]">
-                    5
-                  </div>
-                  <span className="text-[12px] text-[#6a7282]">Sent</span>
-                </div>
+              {/* Right: Compact status badge */}
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-[#6a7282]">Step 3 of 5</span>
+                <span className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md text-[13px] font-medium">
+                  AI coding review
+                </span>
               </div>
             </div>
           </div>

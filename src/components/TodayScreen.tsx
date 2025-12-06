@@ -180,7 +180,7 @@ export function TodayScreen({ onOpenCase, onOpenVisit }: TodayScreenProps) {
             </div>
             {data.sent > 0 && (
               <div className="flex justify-between gap-4">
-                <span className="text-white/70">Sent to Athena</span>
+                <span className="text-white/70">Sent to EHR</span>
                 <span className="font-medium">${(data.sent / 1000).toFixed(1)}k</span>
               </div>
             )}
@@ -302,7 +302,7 @@ export function TodayScreen({ onOpenCase, onOpenVisit }: TodayScreenProps) {
               <div className="flex items-center gap-1.5">
                 <div className="size-3 rounded-sm bg-[#047857]" />
                 <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-[#4a5565] font-medium">Sent to Athena</span>
+                  <span className="text-[11px] text-[#4a5565] font-medium">Sent to EHR</span>
                   <span className="text-[10px] text-[#99A1AF]">· good</span>
                 </div>
               </div>

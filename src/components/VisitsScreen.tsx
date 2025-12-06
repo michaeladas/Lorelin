@@ -8,6 +8,7 @@ type VisitStatus = 'to-record' | 'transcribing' | 'to-review' | 'approved' | 'se
 interface Visit {
   id: string;
   patientName: string;
+  visitReason: string;
   dateTime: string;
   provider: string;
   payer: string;
@@ -18,10 +19,10 @@ interface Visit {
 interface VisitsScreenProps {
   onViewVisit: (visitId: string) => void;
   onRecordVisit: (visitId: string) => void;
-  onSendToAthena: (visitId: string) => void;
+  onSendToEHR: (visitId: string) => void;
 }
 
-export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToAthena }: VisitsScreenProps) {
+export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToEHR }: VisitsScreenProps) {
   const [activeTab, setActiveTab] = useState<StatusTab>('all');
   const [dateFilter, setDateFilter] = useState('today');
   const [providerFilter, setProviderFilter] = useState('all');
@@ -54,6 +55,7 @@ export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToAthena }: Vis
       const transformedVisits: Visit[] = response.visits.map((v: APIVisit) => ({
         id: v.id,
         patientName: v.patient_name,
+        visitReason: v.visit_reason,
         dateTime: `${formatDate(v.visit_date)}, ${v.visit_time}`,
         provider: v.provider,
         payer: v.payer,
@@ -124,10 +126,10 @@ export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToAthena }: Vis
 
   const getStatusColor = (status: VisitStatus) => {
     switch (status) {
-      case 'to-record': return 'bg-emerald-50 text-emerald-600';
-      case 'transcribing': return 'bg-emerald-100 text-emerald-600';
-      case 'to-review': return 'bg-emerald-100 text-emerald-700';
-      case 'approved': return 'bg-emerald-100 text-emerald-800';
+      case 'to-record': return 'bg-blue-50 text-blue-700';
+      case 'transcribing': return 'bg-blue-100 text-blue-800';
+      case 'to-review': return 'bg-blue-200 text-blue-900';
+      case 'approved': return 'bg-indigo-100 text-indigo-900';
       case 'sent': return 'bg-slate-100 text-slate-600';
       default: return 'bg-gray-100 text-gray-700';
     }
@@ -169,10 +171,10 @@ export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToAthena }: Vis
     if (visit.status === 'approved') {
       return (
         <button
-          onClick={() => onSendToAthena(visit.id)}
+          onClick={() => onSendToEHR(visit.id)}
           className="px-3 py-1.5 text-[12px] text-[#101828] hover:text-[#1f2937] font-medium ml-auto whitespace-nowrap"
         >
-          Send to Athena
+          Send to EHR
         </button>
       );
     }
@@ -385,23 +387,23 @@ WHERE tablename = 'visits';`}
             {/* Stats chips */}
             <div className="flex items-center gap-3 mb-4">
               <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg">
-                <div className="size-2 rounded-full bg-emerald-500" />
+                <div className="size-2 rounded-full bg-sky-400" />
                 <span className="text-[12px] text-[#6a7282]">To record:</span>
                 <span className="text-[13px] font-semibold text-[#101828]">{stats.toRecord}</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg">
-                <div className="size-2 rounded-full bg-emerald-600" />
+                <div className="size-2 rounded-full bg-blue-500" />
                 <span className="text-[12px] text-[#6a7282]">To review:</span>
                 <span className="text-[13px] font-semibold text-[#101828]">{stats.toReview}</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg">
-                <div className="size-2 rounded-full bg-emerald-700" />
+                <div className="size-2 rounded-full bg-indigo-600" />
                 <span className="text-[12px] text-[#6a7282]">Approved:</span>
                 <span className="text-[13px] font-semibold text-[#101828]">{stats.approved}</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg">
                 <div className="size-2 rounded-full bg-slate-500" />
-                <span className="text-[12px] text-[#6a7282]">Sent to Athena:</span>
+                <span className="text-[12px] text-[#6a7282]">Sent to EHR:</span>
                 <span className="text-[13px] font-semibold text-[#101828]">{stats.sent}</span>
               </div>
             </div>
@@ -410,24 +412,24 @@ WHERE tablename = 'visits';`}
             <div className="relative">
               <div className="flex h-3 rounded-full overflow-hidden bg-gray-200">
                 <div
-                  className="bg-emerald-500 hover:bg-emerald-600 transition-colors cursor-pointer"
+                  className="bg-sky-400 hover:bg-sky-500 transition-colors cursor-pointer"
                   style={{ width: `${(stats.toRecord / total) * 100}%` }}
                   title={`${stats.toRecord} / ${total} To record`}
                 />
                 <div
-                  className="bg-emerald-600 hover:bg-emerald-700 transition-colors cursor-pointer"
+                  className="bg-blue-500 hover:bg-blue-600 transition-colors cursor-pointer"
                   style={{ width: `${(stats.toReview / total) * 100}%` }}
                   title={`${stats.toReview} / ${total} To review`}
                 />
                 <div
-                  className="bg-emerald-700 hover:bg-emerald-800 transition-colors cursor-pointer"
+                  className="bg-indigo-600 hover:bg-indigo-700 transition-colors cursor-pointer"
                   style={{ width: `${(stats.approved / total) * 100}%` }}
                   title={`${stats.approved} / ${total} Approved`}
                 />
                 <div
                   className="bg-slate-500 hover:bg-slate-600 transition-colors cursor-pointer"
                   style={{ width: `${(stats.sent / total) * 100}%` }}
-                  title={`${stats.sent} / ${total} Sent to Athena`}
+                  title={`${stats.sent} / ${total} Sent to EHR`}
                 />
               </div>
               <div className="text-[11px] text-[#6a7282] mt-2">
@@ -449,7 +451,7 @@ WHERE tablename = 'visits';`}
               >
                 To record
                 {stats.toRecord > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[11px] font-medium">
+                  <span className="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[11px] font-medium">
                     {stats.toRecord}
                   </span>
                 )}
@@ -464,7 +466,7 @@ WHERE tablename = 'visits';`}
               >
                 To review
                 {stats.toReview > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 bg-emerald-200 text-emerald-800 rounded text-[11px] font-medium">
+                  <span className="ml-2 px-1.5 py-0.5 bg-blue-200 text-blue-800 rounded text-[11px] font-medium">
                     {stats.toReview}
                   </span>
                 )}
@@ -479,7 +481,7 @@ WHERE tablename = 'visits';`}
               >
                 Approved
                 {stats.approved > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 bg-emerald-300 text-emerald-900 rounded text-[11px] font-medium">
+                  <span className="ml-2 px-1.5 py-0.5 bg-blue-300 text-blue-900 rounded text-[11px] font-medium">
                     {stats.approved}
                   </span>
                 )}
@@ -502,33 +504,30 @@ WHERE tablename = 'visits';`}
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="px-6 py-3 text-left">
+                  <th className="px-3 py-1.5 text-left">
                     <input
                       type="checkbox"
                       className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-[11px] text-[#6a7282] uppercase tracking-wider font-medium">
+                  <th className="px-3 py-1.5 text-left text-[11px] text-[#6a7282] uppercase tracking-wider font-medium">
                     Patient
                   </th>
-                  <th className="px-6 py-3 text-left text-[11px] text-[#6a7282] uppercase tracking-wider font-medium">
+                  <th className="px-3 py-1.5 text-left text-[11px] text-[#6a7282] uppercase tracking-wider font-medium">
                     Date & time
                   </th>
-                  <th className="px-6 py-3 text-left text-[11px] text-[#6a7282] uppercase tracking-wider font-medium">
-                    Provider
-                  </th>
-                  <th className="px-6 py-3 text-left text-[11px] text-[#6a7282] uppercase tracking-wider font-medium">
-                    Payer
+                  <th className="px-3 py-1.5 text-left text-[11px] text-[#6a7282] uppercase tracking-wider font-medium">
+                    Provider / Payer
                   </th>
                   {activeTab === 'all' && (
-                    <th className="px-6 py-3 text-left text-[11px] text-[#6a7282] uppercase tracking-wider font-medium">
+                    <th className="px-3 py-1.5 text-left text-[11px] text-[#6a7282] uppercase tracking-wider font-medium">
                       Status
                     </th>
                   )}
-                  <th className="px-6 py-3 text-right text-[11px] text-[#6a7282] uppercase tracking-wider font-medium">
+                  <th className="px-3 py-1.5 text-right text-[11px] text-[#6a7282] uppercase tracking-wider font-medium">
                     Charge estimate
                   </th>
-                  <th className="px-6 py-3 text-right text-[11px] text-[#6a7282] uppercase tracking-wider font-medium">
+                  <th className="px-3 py-1.5 text-right text-[11px] text-[#6a7282] uppercase tracking-wider font-medium">
                     Actions
                   </th>
                 </tr>
@@ -539,45 +538,50 @@ WHERE tablename = 'visits';`}
                     key={visit.id}
                     className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-2">
                       <input
                         type="checkbox"
                         className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="text-[13px] font-medium text-[#101828]">
-                        {visit.patientName}
-                      </span>
+                    <td className="px-3 py-2">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[13px] font-medium text-[#101828] tracking-[-0.15px]">
+                          {visit.patientName}
+                        </span>
+                        <span className="text-[12px] text-[#6a7282] tracking-[-0.15px]">
+                          {visit.visitReason}
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-2">
                       <span className="text-[13px] text-[#4a5565]">
                         {visit.dateTime}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="text-[13px] text-[#4a5565]">
-                        {visit.provider}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-[13px] text-[#4a5565]">
-                        {visit.payer}
-                      </span>
+                    <td className="px-3 py-2">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[13px] text-[#4a5565] tracking-[-0.15px]">
+                          {visit.provider}
+                        </span>
+                        <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-[11px] font-medium w-fit">
+                          {visit.payer}
+                        </span>
+                      </div>
                     </td>
                     {activeTab === 'all' && (
-                      <td className="px-6 py-4">
+                      <td className="px-3 py-2">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium ${getStatusColor(visit.status)}`}>
                           {getStatusLabel(visit.status)}
                         </span>
                       </td>
                     )}
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-3 py-2 text-right">
                       <span className="text-[13px] font-medium text-[#101828]">
                         {visit.chargeEstimate}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-3 py-2 text-right">
                       {getActionButton(visit)}
                     </td>
                   </tr>
