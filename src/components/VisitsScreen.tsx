@@ -17,7 +17,7 @@ interface Visit {
 }
 
 interface VisitsScreenProps {
-  onViewVisit: (visitId: string) => void;
+  onViewVisit: (visitId: string, status: VisitStatus) => void;
   onRecordVisit: (visitId: string) => void;
   onSendToEHR: (visitId: string) => void;
 }
@@ -158,10 +158,24 @@ export function VisitsScreen({ onViewVisit, onRecordVisit, onSendToEHR }: Visits
         </button>
       );
     }
-    if (visit.status === 'to-review' || visit.status === 'transcribing') {
+    if (visit.status === 'transcribing') {
       return (
         <button
-          onClick={() => onViewVisit(visit.id)}
+          onClick={() => onViewVisit(visit.id, visit.status)}
+          className="flex items-center justify-end gap-1.5 px-3 py-1.5 text-[12px] text-red-700 hover:text-red-800 font-medium ml-auto"
+        >
+          <div className="relative flex items-center justify-center mr-0.5">
+            <div className="absolute size-2 bg-red-500 rounded-full animate-ping opacity-75" />
+            <div className="relative size-1.5 bg-red-600 rounded-full" />
+          </div>
+          Live visit
+        </button>
+      );
+    }
+    if (visit.status === 'to-review') {
+      return (
+        <button
+          onClick={() => onViewVisit(visit.id, visit.status)}
           className="px-3 py-1.5 text-[12px] text-[#101828] hover:text-[#1f2937] font-medium ml-auto"
         >
           Review

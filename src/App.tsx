@@ -14,9 +14,9 @@ import { AppealLetterTemplate } from './components/templates/AppealLetterTemplat
 import { ReconsiderationLetterTemplate } from './components/templates/ReconsiderationLetterTemplate';
 import { VisitsScreen } from './components/VisitsScreen';
 import { VisitDetailScreen } from './components/VisitDetailScreen';
+import { VisitLiveScreen } from './components/VisitLiveScreen';
 import { VisitRecordScreen } from './components/VisitRecordScreen';
 import { VisitApprovedScreen } from './components/VisitApprovedScreen';
-import { EligibilityScreen } from './components/EligibilityScreen';
 import { PreVisitScreen } from './components/PreVisitV2Screen';
 import { AuthWorkspaceScreen } from './components/AuthWorkspaceScreen';
 import { EligibilityWorkspaceScreen } from './components/EligibilityWorkspaceScreen';
@@ -206,9 +206,10 @@ function Sidebar({ currentView, onNavigate, onNavigateToPreVisit, onNavigateToIn
 }
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'today' | 'disputes' | 'denial-insights' | 'patient-balances' | 'bill-detail' | 'visits' | 'pre-visit' | 'auth-workspace' | 'eligibility-workspace' | 'visit-detail' | 'visit-record' | 'visit-approved' | 'intake' | 'templates' | 'template-1' | 'template-2' | 'template-3' | 'template-4' | 'case-detail' | 'case-detail-idr' | 'case-detail-appeal' | 'design-system'>('today');
+  const [currentView, setCurrentView] = useState<'today' | 'disputes' | 'denial-insights' | 'patient-balances' | 'bill-detail' | 'visits' | 'pre-visit' | 'auth-workspace' | 'eligibility-workspace' | 'visit-detail' | 'visit-live' | 'visit-record' | 'visit-approved' | 'intake' | 'templates' | 'template-1' | 'template-2' | 'template-3' | 'template-4' | 'case-detail' | 'case-detail-idr' | 'case-detail-appeal' | 'design-system'>('today');
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const [selectedBillId, setSelectedBillId] = useState<string | null>(null);
+  const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
   const [authStatus, setAuthStatus] = useState<'needed' | 'submitted' | 'approved' | 'denied'>('needed');
   const [eligibilityData, setEligibilityData] = useState<any>(null);
 
@@ -238,20 +239,28 @@ export default function App() {
     setCurrentView('templates');
   };
 
-  const handleViewVisit = (visitId: string) => {
-    setCurrentView('visit-approved');
+  const handleViewVisit = (visitId: string, status?: string) => {
+    setSelectedVisitId(visitId);
+    if (status === 'transcribing') {
+      setCurrentView('visit-live');
+    } else {
+      setCurrentView('visit-approved');
+    }
   };
 
   const handleRecordVisit = (visitId: string) => {
     setCurrentView('visit-record');
+    setSelectedVisitId(visitId);
   };
 
   const handleSendToEHR = (visitId: string) => {
     setCurrentView('visit-detail');
+    setSelectedVisitId(visitId);
   };
 
   const handleBackToVisits = () => {
     setCurrentView('visits');
+    setSelectedVisitId(null);
   };
 
   const handleOpenAuthWorkspace = (status: 'needed' | 'submitted' | 'approved' | 'denied' = 'needed') => {
@@ -290,6 +299,8 @@ export default function App() {
           <VisitsScreen onViewVisit={handleViewVisit} onRecordVisit={handleRecordVisit} onSendToEHR={handleSendToEHR} />
         ) : currentView === 'visit-detail' ? (
           <VisitDetailScreen onBack={handleBackToVisits} />
+        ) : currentView === 'visit-live' ? (
+          <VisitLiveScreen onBack={handleBackToVisits} />
         ) : currentView === 'visit-record' ? (
           <VisitRecordScreen onBack={handleBackToVisits} />
         ) : currentView === 'visit-approved' ? (
